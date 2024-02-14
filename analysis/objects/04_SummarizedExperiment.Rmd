@@ -1,0 +1,103 @@
+---
+title:    "Ocampo Lab mouse reprogramming"
+subtitle: "Create Summarized Experiment object"
+author:   "Author: João Agostinho de Sousa"
+date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    theme: default
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+# Load libraries
+```{r}
+
+library(tidyverse)
+library(SummarizedExperiment)
+library(DESeq2)
+
+```
+
+# Load objects
+```{r}
+
+# Metadata
+load(file = "output/database/metadata.RData")
+
+# tximport object
+load(file = "output/database/tximport_object.RData")
+
+# Gene annotation
+load(file = "output/database/edb_gene_annotation.RData")
+
+```
+
+# DESeq2 objects
+```{r}
+
+# Subset metadata to match the tximport object samples
+metadata_subset <- 
+  metadata %>% 
+  filter(`Sample ID` %in% colnames(tximport_object$counts))
+
+# Check if the sample IDs in the metadata are the same and in the same order as in the tximport object
+stopifnot(identical(metadata_subset$`Sample ID`, colnames(tximport_object$counts)))
+
+# DESeq2 dataset
+deseq2_object <- 
+  DESeq2::DESeqDataSetFromTximport(txi     = tximport_object, 
+                                   colData = metadata_subset, 
+                                   design  = ~ Tissue + Genotype)
+
+# Generating transformed counts (for visualization and clustering only !!)  
+vst <- DESeq2::vst(deseq2_object, blind = TRUE)
+  
+# Generate normalized counts
+norm_counts <- DESeq2::estimateSizeFactors(deseq2_object) %>% DESeq2::counts(normalized = T)
+
+# Generate log2 normalized counts + 1
+log2_norm_counts <- log2(norm_counts + 1)
+
+```
+
+# Create a summarized experiment object with counts, metadata, and gene attributes
+```{r}
+
+# Adding the sample name to the columns of the counts dataframes
+vst_counts <- assay(vst)
+colnames(vst_counts)             <- metadata_subset$`Sample ID`
+colnames(norm_counts)            <- metadata_subset$`Sample ID`
+colnames(log2_norm_counts)       <- metadata_subset$`Sample ID`
+colnames(tximport_object$counts) <- metadata_subset$`Sample ID`
+
+SummarizedExperiment_object <- 
+  SummarizedExperiment(assays    = 
+                         list(norm_counts      = norm_counts[edb_gene_annotation$gene_id, metadata_subset$`Sample ID`],
+                              log2_norm_counts = log2_norm_counts[edb_gene_annotation$gene_id, metadata_subset$`Sample ID`],
+                              vst_counts       = vst_counts[edb_gene_annotation$gene_id, metadata_subset$`Sample ID`],
+                              raw_counts       = tximport_object$counts[edb_gene_annotation$gene_id, metadata_subset$`Sample ID`]),
+                       rowData   = edb_gene_annotation, 
+                       colData   = metadata_subset %>% column_to_rownames("Sample ID"))
+
+```
+
+# Save object
+```{r}
+
+save(SummarizedExperiment_object, file = "output/database/SummarizedExperiment_object.RData")
+
+```
+
+# Session information
+```{r Session info, echo = FALSE, results = "markup"}
+
+devtools::session_info()
+
+```
+
+This document was processed on: `r Sys.Date()`.

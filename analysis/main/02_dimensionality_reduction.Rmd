@@ -1,0 +1,293 @@
+---
+title:    "Ocampo Lab mouse reprogramming"
+subtitle: "Dimensionality reduction"
+author:   "Author: João Agostinho de Sousa"
+date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    theme: default
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+# Load libraries
+```{r}
+
+library(tidyverse)
+library(SummarizedExperiment)
+library(patchwork)
+
+```
+
+# Load objects
+```{r}
+
+# SummarizedExperiment object
+load(file = "output/database/SummarizedExperiment_object.RData")
+
+```
+
+# Load functions
+```{r}
+
+# Theme publication
+source(file = "analysis/functions/theme_publication.R")
+
+# PCA data
+source(file = "analysis/functions/pca_transformed_counts_data.R")
+
+# PCA plot
+source(file = "analysis/functions/pca_transformed_counts_plot.R")
+
+```
+
+# PCA plots
+```{r}
+
+pca_plot_data <- 
+pca_transformed_counts_data(object     = assay(SummarizedExperiment_object, "vst_counts"), 
+                            metadata   = colData(SummarizedExperiment_object), 
+                            intgroup   = "Genotype", 
+                            ntop       = 1000, 
+                            returnData = TRUE)
+
+PCA_plot_combined <- 
+map(list("PC1.vs.PC2" = c("PC1", "PC2"),
+         "PC1.vs.PC3" = c("PC1", "PC3"),
+         "PC2.vs.PC3" = c("PC2", "PC3")), function(PCs){
+
+  (pca_transformed_counts_plot(pca_results_object = pca_plot_data, 
+                              metadata           = colData(SummarizedExperiment_object), 
+                              PCs                = PCs, 
+                              color_by           = "Tissue", 
+                              color_palette      = "Dark2",
+                              color_column       = F) + 
+      labs(fill     = "Tissue",
+           title    = "Principal component analysis coloured by tissue",
+           subtitle = "Top 1000 most variable genes") +
+     theme(plot.title = element_text(face = "bold")) +
+     guides(fill = guide_legend(nrow = 3, byrow = TRUE))) +
+  
+  (pca_transformed_counts_plot(pca_results_object = pca_plot_data, 
+                              metadata           = colData(SummarizedExperiment_object), 
+                              PCs                = PCs, 
+                              color_by           = "Color", 
+                              color_palette      = "Set3", 
+                              color_column       = T,
+                              color_column_name  = "Genotype") +
+        labs(fill     = "Genotype",
+             title    = "Principal component analysis coloured by genotype",
+             subtitle = "Top 1000 most variable genes") +
+     theme(plot.title = element_text(face = "bold")))
+})
+
+```
+
+# PCA plots by tissue
+```{r}
+
+PCA_plot_by_tissue <- 
+map(list("Kidney"          = "Kidney",
+         "Liver"           = "Liver",
+         "Small Intestine" = "Small Intestine",
+         "Heart"           = "Heart",
+         "Brain"           = "Brain",
+         "Skeletal muscle" = "Skeletal muscle",
+         "Spleen"          = "Spleen"
+         ), function(tissue){
+  
+  pca_plot_data <- 
+  pca_transformed_counts_data(object     = assay(SummarizedExperiment_object[, SummarizedExperiment_object$Tissue == tissue], "vst_counts"), 
+                              metadata   = colData(SummarizedExperiment_object[, SummarizedExperiment_object$Tissue == tissue]), 
+                              intgroup   = "Genotype", 
+                              ntop       = 1000, 
+                              returnData = TRUE)
+  
+  pca_transformed_counts_plot(pca_results_object = pca_plot_data, 
+                              metadata           = colData(SummarizedExperiment_object[, SummarizedExperiment_object$Tissue == tissue]), 
+                              PCs                = c("PC1", "PC2"), 
+                              color_by           = "Color", 
+                              color_palette      = "Set3", 
+                              color_column       = T,
+                              color_column_name  = "Genotype") +
+    labs(fill     = "Genotype",
+         title    = tissue,
+         subtitle = "Top 1000 most variable genes") +
+    theme(plot.title = element_text(size = 13, face = "bold"))
+})
+
+PCA_plot_tissue <-
+  PCA_plot_by_tissue$Kidney + 
+  PCA_plot_by_tissue$Liver +
+  PCA_plot_by_tissue$`Small Intestine` +
+  PCA_plot_by_tissue$Heart +
+  PCA_plot_by_tissue$Brain +
+  PCA_plot_by_tissue$`Skeletal muscle` +
+  PCA_plot_by_tissue$Spleen +
+  patchwork::plot_layout(nrow = 2)
+
+```
+
+# T-SNE plots
+```{r}
+
+tSNE_plot_function <- 
+function(rnaseq_object, metadata, fill_column, perplexity_vector) {
+  
+  # Creating the T-SNE fit 
+  set.seed(123)
+  tSNE_fit <- 
+    map(perplexity_vector %>% set_names(.,.),
+    ~ Rtsne::Rtsne(X           = t(rnaseq_object), 
+                   perplexity  = .x, 
+                   max_iter    = 1000, 
+                   normalize   = FALSE, 
+                   num_threads = 10)
+    )
+
+  # Extracting the T-SNE results 
+  tSNE_df <-
+    map2_dfr(tSNE_fit, names(tSNE_fit),
+      ~ .x$Y %>% 
+      as.data.frame() %>%
+      dplyr::rename(tSNE1 = "V1",
+                    tSNE2 = "V2") %>%
+      mutate(ID = row_number()) %>% 
+      mutate(perplexity = .y) %>% 
+      mutate(!!fill_column := metadata[, fill_column, drop = T])
+    ) %>% 
+    mutate(perplexity = factor(paste("Perplexity =", perplexity), levels = paste("Perplexity =", perplexity_vector)))
+
+# T-SNE plot colored by metallomics batch
+  tSNE_plot <- 
+    tSNE_df %>%
+    ggplot(aes(x    = tSNE1, 
+               y    = tSNE2,
+               fill = !!sym(fill_column))) +
+    geom_point(shape = 21, size = 5, color = "white", show.legend = T) +
+    labs(fill  = fill_column, 
+         title = "t-SNE projection",
+         subtitle = paste0(nrow(rnaseq_object), " genes were used to build the projection")) +
+    theme_bw() +
+    theme(strip.background = element_blank(),
+          strip.text       = element_text(color = "black", size = 12, face = "bold"),
+          legend.position  = "right",
+          legend.direction = "vertical",
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text        = element_text(color = "black", size = 11), 
+          axis.title       = element_text(color = "black", size = 12), 
+          legend.text      = element_text(color = "black", size = 11), 
+          legend.title     = element_text(color = "black", size = 12),
+          plot.title       = element_text(face = "bold"),
+          plot.subtitle    = element_text(face = "plain"),
+          ) +
+    facet_wrap(~ perplexity, scales = "free")
+  
+  return(tSNE_plot)
+
+}
+
+tSNE_plots <- 
+  tSNE_plot_function(rnaseq_object     = assay(SummarizedExperiment_object, "vst_counts"), 
+                     metadata          = colData(SummarizedExperiment_object), 
+                     fill_column       = "Tissue", 
+                     perplexity_vector = c(5, 10, 15, 20, 25, 30)) + 
+    scale_fill_brewer(palette = "Dark2")
+
+```
+
+# UMAP plots
+```{r}
+
+UMAP_plot_function <- 
+function(rnaseq_object, metadata, fill_column, n_neighbors_vector) {
+  
+  # Creating the UMAP fit 
+  UMAP_fit <-
+    map(n_neighbors_vector %>% set_names(.,.), function(x){
+      
+        # Changing the UMAP defaults
+        umap_defaults             <- umap::umap.defaults
+        umap_defaults$n_neighbors <- x
+      
+        umap::umap(d             = t(rnaseq_object), 
+                   preserve.seed = TRUE,
+                   config        = umap_defaults,
+                   method        = c("naive", "umap-learn"))
+    })
+
+  # Extracting the UMAP results 
+  UMAP_df <-
+    map2_dfr(UMAP_fit, names(UMAP_fit),
+      ~ .x$layout %>% 
+      as.data.frame() %>%
+      dplyr::rename(UMAP1 = "V1",
+                    UMAP2 = "V2") %>%
+      mutate(ID = row_number()) %>% 
+      mutate(n_neighbors = .y) %>% 
+      mutate(!!fill_column := metadata[, fill_column, drop = T])
+    ) %>% 
+    mutate(n_neighbors = factor(paste("Number of neighbors =", n_neighbors), levels = paste("Number of neighbors =", n_neighbors_vector)))
+  
+  # UMAP plot 
+  UMAP_plot <- 
+    UMAP_df %>%
+    ggplot(aes(x    = UMAP1, 
+               y    = UMAP2,
+               fill = !!sym(fill_column))) +
+    geom_point(shape = 21, size = 5, color = "white", show.legend = T) +
+    labs(fill  = fill_column, 
+         title = "UMAP projection",
+         subtitle = paste0(nrow(rnaseq_object), " genes were used to build the projection")) +
+    theme_bw() +
+    theme(strip.background = element_blank(),
+          strip.text       = element_text(color = "black", size = 12, face = "bold"),
+          legend.position  = "right",
+          legend.direction = "vertical",
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text        = element_text(color = "black", size = 11), 
+          axis.title       = element_text(color = "black", size = 12), 
+          legend.text      = element_text(color = "black", size = 11), 
+          legend.title     = element_text(color = "black", size = 12),
+          plot.title       = element_text(face = "bold"),
+          plot.subtitle    = element_text(face = "plain"),
+          ) +
+    facet_wrap(~ n_neighbors, scales = "free")
+  
+  return(UMAP_plot)
+
+}
+
+UMAP_plots <- 
+  UMAP_plot_function(rnaseq_object     = assay(SummarizedExperiment_object, "vst_counts"), 
+                     metadata          = colData(SummarizedExperiment_object), 
+                     fill_column       = "Tissue", 
+                     n_neighbors_vector = c(10, 20, 30, 40, 50, 60)) + 
+    scale_fill_brewer(palette = "Dark2")
+
+```
+
+# Save plots
+```{r}
+
+PCA_plot_combined
+PCA_plot_tissue
+tSNE_plots
+UMAP_plots
+
+```
+
+# Session information
+```{r Session info, echo = FALSE, results = "markup"}
+
+devtools::session_info()
+
+```
+
+This document was processed on: `r Sys.Date()`.

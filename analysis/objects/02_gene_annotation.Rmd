@@ -1,0 +1,78 @@
+---
+title:    "Ocampo Lab mouse reprogramming"
+subtitle: "Gene annotation"
+author:   "Author: João Agostinho de Sousa"
+date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    theme: default
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+# Load libraries
+```{r}
+
+library(tidyverse)
+library(ensembldb)
+
+```
+
+# Transcript-to-gene mapping
+```{r}
+
+# Path to the GTF file 
+gtf <- list.files(path       = "docs/genome",
+                  pattern    = "gtf",
+                  full.names = T)
+
+# Name for the transcript database 
+txdb.filename <- gtf %>%
+                 str_extract(pattern = "([^/]+$)") %>%
+                 str_replace(pattern = ".gtf", replacement = "_txDb.sqlite")
+
+# Create the transcript database from GTF file
+GenomicFeatures::makeTxDbFromGFF(gtf, organism = "Mus musculus", format = "gtf") %>%
+  saveDb(paste0("output/database/", txdb.filename))
+
+# Create the ensembl database from GTF file
+# Note that this creates the SQLite database and does not return an EnsDb.
+ensembldb::ensDbFromGtf(gtf           = gtf,
+                        path          = "output/database/",
+                        outfile       = "output/database/Mus_musculus_GRCm39_ensDb.sqlite",
+                        genomeVersion = "GRCm39",
+                        organism      = "Mus_musculus",
+                        version       = 110)
+
+```
+
+# Create table with Capreolus capreolus gene names
+```{r}
+
+# Loading ensembl gene database
+edb <- ensembldb::EnsDb("output/database/Mus_musculus_GRCm39_ensDb.sqlite")
+
+# Extracting the gene attributes from the ensembl database 
+edb_gene_annotation <- genes(edb, columns = c("gene_id", "gene_name", "gene_biotype")) %>% as.data.frame()
+
+```
+
+# Save gene annotation object
+```{r}
+
+save(edb_gene_annotation, file = "output/database/edb_gene_annotation.RData")
+
+```
+
+# Session information
+```{r Session info, echo = FALSE, results = "markup"}
+
+devtools::session_info()
+
+```
+
+This document was processed on: `r Sys.Date()`.

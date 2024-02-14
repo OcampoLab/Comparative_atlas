@@ -1,0 +1,55 @@
+---
+title:    "Ocampo Lab mouse reprogramming"
+subtitle: "Create metadata"
+author:   "Author: João Agostinho de Sousa"
+date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    theme: default
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+# Load libraries
+```{r}
+
+library(tidyverse)
+
+```
+
+# Load metadata
+```{r}
+
+metadata <- readxl::read_xlsx("docs/metadata/metadata_mouse.xlsx")
+
+```
+
+# Convert the Tissue and Genotype columns to factors
+```{r}
+
+metadata <- 
+  metadata %>% 
+  mutate(Tissue = factor(Tissue, levels = unique(Tissue))) %>% 
+  mutate(Genotype = factor(Genotype, levels = unique(Genotype)))
+
+```
+
+# Save object
+```{r}
+
+save(metadata, file = "output/database/metadata.RData")
+
+```
+
+# Session information
+```{r Session info, echo = FALSE, results = "markup"}
+
+devtools::session_info()
+
+```
+
+This document was processed on: `r Sys.Date()`.
