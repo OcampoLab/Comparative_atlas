@@ -49,8 +49,68 @@ source(file = "analysis/functions/theme_publication.R")
 OSKM_gene_ids <- 
   rowData(SummarizedExperiment_object) %>% 
   as.data.frame() %>% 
-  filter(gene_name %in% c("Pou5f1", "Sox2", "Klf4", "Myc")) %>% 
+  filter(gene_name %in% c("Pou5f1", "Sox2", "Myc", "Klf4")) %>% 
   pull(gene_id)
+
+# Barplot with the OSKM gene expression per Tissue and Genotype (by sample)
+barplot_OSKM_expression_by_sample <- 
+  assay(SummarizedExperiment_object, "log2_norm_counts") %>% 
+  .[OSKM_gene_ids,] %>% 
+  as.data.frame() %>% 
+  rownames_to_column("gene_id") %>% 
+  gather(`Sample ID`, log2_norm_counts, -gene_id) %>% 
+  left_join(as.data.frame(rowData(SummarizedExperiment_object))) %>% 
+  dplyr::select(`Sample ID`, log2_norm_counts, gene_name) %>% 
+  left_join(as.data.frame(colData(SummarizedExperiment_object)) %>% rownames_to_column("Sample ID")) %>% 
+  arrange(Tissue, Genotype) %>% 
+  mutate(`Sample ID` = factor(`Sample ID`, levels = unique(`Sample ID`))) %>% 
+  mutate(Color       = factor(Color,       levels = unique(Color))) %>%
+  mutate(gene_name   = factor(gene_name,   levels = c("Pou5f1", "Sox2", "Myc", "Klf4"))) %>% 
+  ggplot(aes(`Sample ID`, log2_norm_counts, fill = Color)) + 
+  geom_hline(yintercept = 0) +
+  geom_col() +
+  facet_wrap(Tissue ~ gene_name, scales = "free", ncol = 4) + 
+  scale_fill_identity(guide = "legend", labels = levels(SummarizedExperiment_object$Genotype)) + 
+  theme_publication() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor   = element_blank(),
+        panel.border       = element_blank(), 
+        strip.placement    = "ouside",
+        legend.direction   = "horizontal", 
+        strip.text.y       = element_text(angle = 0, hjust = 0),
+        axis.text.x        = element_text(hjust = 1, vjust = 1, angle = 45)) +
+  labs(y = "Log2(norm. counts + 1)", fill = "Genotype") +
+  scale_y_continuous(expand = c(0,0), limits = c(0, 13.5))
+
+# Heatmap with the OSKM gene expression per Tissue and Genotype (by sample)
+heatmap_OSKM_expression_by_sample <- 
+  assay(SummarizedExperiment_object, "log2_norm_counts") %>% 
+  .[OSKM_gene_ids,] %>% 
+  as.data.frame() %>% 
+  rownames_to_column("gene_id") %>% 
+  gather(`Sample ID`, log2_norm_counts, -gene_id) %>% 
+  left_join(as.data.frame(rowData(SummarizedExperiment_object))) %>% 
+  dplyr::select(`Sample ID`, log2_norm_counts, gene_name) %>% 
+  left_join(as.data.frame(colData(SummarizedExperiment_object)) %>% rownames_to_column("Sample ID")) %>% 
+  arrange(Tissue, Genotype) %>% 
+  mutate(`Sample ID` = factor(`Sample ID`, levels = unique(`Sample ID`))) %>% 
+  mutate(Color       = factor(Color,       levels = unique(Color))) %>%
+  mutate(gene_name   = factor(gene_name,   levels = c("Pou5f1", "Sox2", "Myc", "Klf4"))) %>% 
+  ggplot(aes(`Sample ID`, fct_rev(gene_name), fill = log2_norm_counts)) + 
+  geom_tile(color = "white") +
+  theme_publication() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        panel.border     = element_blank(), 
+        axis.title.x     = element_blank(), 
+        axis.title.y     = element_blank(), 
+        plot.title       = element_text(face = "bold"),
+        legend.key.width = unit(0.35, "in"),
+        axis.text.x      = element_text(hjust = 1, vjust = 1, angle = 45, colour = SummarizedExperiment_object$Color)) +
+  facet_wrap(~ Tissue, scales = "free", drop = T) +
+  labs(fill = "Log2(norm. counts + 1)", title = "OSKM RNA-seq normalized counts") +
+  paletteer::scale_fill_paletteer_c("ggthemes::Orange-Blue Diverging", direction = -1) +
+  scale_y_discrete(expand = c(0,0))
 
 # Barplot with the OSKM gene expression per Tissue and Genotype
 barplot_OSKM_expression <- 
@@ -66,20 +126,24 @@ barplot_OSKM_expression <-
   summarise(mean_log2_norm_counts = mean(log2_norm_counts),
             sd_log2_norm_counts   = sd(log2_norm_counts)) %>% 
   ungroup %>% 
+  arrange(Tissue, Genotype) %>% 
+  mutate(Genotype = factor(Genotype, levels = unique(Genotype))) %>% 
+  mutate(Color    = factor(Color,    levels = unique(Color))) %>%
+  mutate(gene_name   = factor(gene_name,   levels = c("Pou5f1", "Sox2", "Myc", "Klf4"))) %>% 
   ggplot(aes(Genotype, mean_log2_norm_counts, fill = Color)) + 
   geom_hline(yintercept = 0) +
   geom_col() +
   geom_errorbar(mapping = aes(ymin = mean_log2_norm_counts-sd_log2_norm_counts,
                               ymax = mean_log2_norm_counts+sd_log2_norm_counts), width = 0.2) +
   facet_grid(Tissue ~ gene_name) + 
-  scale_fill_identity(aes(Color)) + 
+  scale_fill_identity(guide = "legend", labels = levels(SummarizedExperiment_object$Genotype)) + 
   theme_publication() +
   theme(panel.grid.major.x = element_blank(),
         panel.grid.minor = element_blank(),
         panel.border = element_blank(), 
         strip.placement = "ouside", 
         strip.text.y = element_text(angle = 0, hjust = 0)) +
-  labs(y = "Log2(norm. counts + 1)") +
+  labs(y = "Log2(norm. counts + 1)", fill = "Genotype") +
   scale_y_continuous(expand = c(0,0))
 
 # Heatmap with the OSKM gene expression per Tissue and Genotype
@@ -96,6 +160,7 @@ heatmap_OSKM_expression <-
   summarise(mean_log2_norm_counts = mean(log2_norm_counts),
             sd_log2_norm_counts   = sd(log2_norm_counts)) %>% 
   ungroup %>% 
+  mutate(gene_name   = factor(gene_name,   levels = c("Pou5f1", "Sox2", "Myc", "Klf4"))) %>% 
   ggplot(aes(Genotype, fct_rev(Tissue), fill = mean_log2_norm_counts)) + 
   geom_tile(color = "white") +
   theme_publication() +
@@ -106,37 +171,9 @@ heatmap_OSKM_expression <-
         plot.title       = element_text(face = "bold"),
         legend.key.width = unit(0.35, "in")) +
   facet_grid( ~ gene_name) +
-  labs(fill = "Log2(norm. counts + 1)", title = "OSKM RNA-seq normalized counts", subtitle = "The results presented are the mean normalized counts of the biological replicates") +
-  paletteer::scale_fill_paletteer_c("ggthemes::Orange-Blue Diverging", direction = -1)
-
-# Heatmap with the OSKM gene expression per Tissue and Genotype (scaled by row for each gene)
-heatmap_OSKM_expression_scaled <- 
-  assay(SummarizedExperiment_object, "log2_norm_counts") %>% 
-  .[OSKM_gene_ids,] %>% 
-  as.data.frame() %>% 
-  rownames_to_column("gene_id") %>% 
-  gather(`Sample ID`, log2_norm_counts, -gene_id) %>% 
-  left_join(as.data.frame(rowData(SummarizedExperiment_object))) %>% 
-  dplyr::select(`Sample ID`, log2_norm_counts, gene_name) %>% 
-  left_join(as.data.frame(colData(SummarizedExperiment_object)) %>% rownames_to_column("Sample ID")) %>% 
-  group_by(Genotype, Tissue, gene_name, Color) %>% 
-  summarise(mean_log2_norm_counts = mean(log2_norm_counts),
-            sd_log2_norm_counts   = sd(log2_norm_counts)) %>% 
-  ungroup %>% 
-  group_by(Tissue, gene_name) %>% 
-  mutate(scaled_mean_log2_norm_counts = scale(mean_log2_norm_counts)) %>% 
-  ungroup %>% 
-  ggplot(aes(Genotype, fct_rev(Tissue), fill = scaled_mean_log2_norm_counts)) + 
-  geom_tile(color = "white") +
-  theme_publication() +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), 
-        panel.border     = element_blank(), 
-        axis.title.y     = element_blank(), 
-        plot.title       = element_text(face = "bold"),
-        legend.key.width = unit(0.35, "in")) +
-  facet_grid( ~ gene_name) +
-  labs(fill = "Scaled log2(norm. counts + 1)", title = "OSKM RNA-seq normalized counts", subtitle = "The normalized counts were scaled by row for each gene") +
+  labs(fill     = "Log2(norm. counts + 1)", 
+       title    = "OSKM RNA-seq normalized counts", 
+       subtitle = "The results presented are the mean normalized counts of the biological replicates") +
   paletteer::scale_fill_paletteer_c("ggthemes::Orange-Blue Diverging", direction = -1)
 
 ```
@@ -157,7 +194,7 @@ DGE_genotype_WT_tissue_OSKM <-
     
     rowData(SummarizedExperiment_object) %>% 
       as.data.frame() %>% 
-      filter(gene_name %in% c("Pou5f1", "Sox2", "Klf4", "Myc")) %>%
+      filter(gene_name %in% c("Pou5f1", "Sox2", "Myc", "Klf4")) %>%
       dplyr::select(gene_id, gene_name) %>% 
       left_join(DGE_sign_results) %>% 
       mutate(comparison = y, 
@@ -171,6 +208,8 @@ DGE_OSKM_plot <-
     mutate(Genotype = factor(Genotype, levels = levels(SummarizedExperiment_object$Genotype)),
            Tissue   = factor(Tissue, levels = levels(SummarizedExperiment_object$Tissue))) %>%
     mutate(padj = -log10(padj)) %>% 
+    mutate(gene_name   = factor(gene_name,   levels = c("Pou5f1", "Sox2", "Myc", "Klf4"))) %>% 
+    mutate(log2FoldChange = -log2FoldChange) %>% 
     ggplot(aes(Genotype, fct_rev(Tissue))) + 
     geom_tile(color = "black", fill = NA) + 
     geom_point(mapping = aes(fill = log2FoldChange, size = padj), color = "black", shape = 21) + 
@@ -183,22 +222,36 @@ DGE_OSKM_plot <-
           plot.title       = element_text(face = "bold"),
           legend.key.width = unit(0.35, "in")) + 
     scale_size_area(max_size = 15) +
-    scale_fill_distiller(palette = "Reds") +
+    scale_fill_distiller(palette = "Reds", direction = 1) +
     labs(fill     = "Log2(Fold change)", 
          size     = "-Log10(Adj. P-value)",
          title    = "Differential expression results between genotypes and wild type (WT)", 
-         subtitle = "Negative Log2 Fold change means the WT samples have lower expression") 
+         subtitle = "Positive Log2 Fold change means the WT samples have lower expression") 
 
 ```
 
 # Save plots
 ```{r}
 
-svg(filename = "output/figures/plot1.svg", width = 11, height = 15)
-patchwork::wrap_plots(barplot_OSKM_expression, heatmap_OSKM_expression, ncol = 1, byrow = 2, heights = c(1, 0.25))
+svg(filename = "output/figures/barplot_OSKM_expression_by_sample.svg", width = 15, height = 25)
+barplot_OSKM_expression_by_sample
 dev.off()
 
+pdf(file = "output/figures/heatmap_OSKM_expression_by_sample.pdf", width = 13, height = 8)
+heatmap_OSKM_expression_by_sample
+dev.off()
+
+svg(filename = "output/figures/barplot_OSKM_expression.svg", width = 10, height = 13)
+barplot_OSKM_expression
+dev.off()
+
+pdf(file = "output/figures/heatmap_OSKM_expression.pdf", width = 10, height = 5)
+heatmap_OSKM_expression
+dev.off()
+
+pdf(file = "output/figures/DGE_OSKM_plot.pdf", width = 10, height = 5)
 DGE_OSKM_plot
+dev.off()
 
 ```
 
