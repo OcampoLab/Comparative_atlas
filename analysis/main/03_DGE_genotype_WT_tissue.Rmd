@@ -459,7 +459,7 @@ map2(DGE_results$DGE_genotype_WT_tissue[1:7], names(DGE_results$DGE_genotype_WT_
     DGE_results_w_gene_anno %>% 
     filter(abs(log2FoldChange) > 2 & padj < 0.05)
   
-  ggplot(data = data, aes(log2FoldChange, -log10(padj), color = -log10(padj))) + 
+  ggplot(data = DGE_results_w_gene_anno, aes(log2FoldChange, -log10(padj), color = -log10(padj))) + 
     geom_hline(yintercept = 0) +
     geom_vline(xintercept = 0) +
     geom_hline(yintercept = -log10(0.05), color = "darkgray", lty = 2) +
@@ -469,7 +469,7 @@ map2(DGE_results$DGE_genotype_WT_tissue[1:7], names(DGE_results$DGE_genotype_WT_
     geom_point(data = signficant_data, size = 3) +
     ggrepel::geom_label_repel(data = geom_label_data, mapping = aes(label = gene_name), color = "black", box.padding = unit(0.1, "in")) +
     theme_publication() +
-    scale_x_continuous(limits = c(-10, 10)) +
+    scale_x_continuous(limits = ggpmisc::symmetric_limits) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), 
           legend.direction = "vertical", 
@@ -769,7 +769,7 @@ map2(DGE_results$DGE_genotype_WT_tissue[8:13], names(DGE_results$DGE_genotype_WT
     DGE_results_w_gene_anno %>% 
     filter(abs(log2FoldChange) > 2 & padj < 0.05)
   
-  ggplot(data = data, aes(log2FoldChange, -log10(padj), color = -log10(padj))) + 
+  ggplot(data = DGE_results_w_gene_anno, aes(log2FoldChange, -log10(padj), color = -log10(padj))) + 
     geom_hline(yintercept = 0) +
     geom_vline(xintercept = 0) +
     geom_hline(yintercept = -log10(0.05), color = "darkgray", lty = 2) +
@@ -779,7 +779,7 @@ map2(DGE_results$DGE_genotype_WT_tissue[8:13], names(DGE_results$DGE_genotype_WT
     geom_point(data = signficant_data, size = 3) +
     ggrepel::geom_label_repel(data = geom_label_data, mapping = aes(label = gene_name), color = "black", box.padding = unit(0.1, "in")) +
     theme_publication() +
-    scale_x_continuous(limits = c(-10, 10)) +
+    scale_x_continuous(limits = ggpmisc::symmetric_limits) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), 
           legend.direction = "vertical", 
@@ -1076,7 +1076,7 @@ map2(DGE_results$DGE_genotype_WT_tissue[14:19], names(DGE_results$DGE_genotype_W
     DGE_results_w_gene_anno %>% 
     filter(abs(log2FoldChange) > 2 & padj < 0.05)
   
-  ggplot(data = data, aes(log2FoldChange, -log10(padj), color = -log10(padj))) + 
+  ggplot(data = DGE_results_w_gene_anno, aes(log2FoldChange, -log10(padj), color = -log10(padj))) + 
     geom_hline(yintercept = 0) +
     geom_vline(xintercept = 0) +
     geom_hline(yintercept = -log10(0.05), color = "darkgray", lty = 2) +
@@ -1086,7 +1086,7 @@ map2(DGE_results$DGE_genotype_WT_tissue[14:19], names(DGE_results$DGE_genotype_W
     geom_point(data = signficant_data, size = 3) +
     ggrepel::geom_label_repel(data = geom_label_data, mapping = aes(label = gene_name), color = "black", box.padding = unit(0.1, "in")) +
     theme_publication() +
-    scale_x_continuous(limits = c(-10, 10)) +
+    scale_x_continuous(limits = ggpmisc::symmetric_limits) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), 
           legend.direction = "vertical", 
@@ -1387,17 +1387,18 @@ map2(DGE_results$DGE_genotype_WT_tissue[20:26], names(DGE_results$DGE_genotype_W
     DGE_results_w_gene_anno %>% 
     filter(abs(log2FoldChange) > 2 & padj < 0.05)
   
-  ggplot(data = data, aes(log2FoldChange, -log10(padj), color = -log10(padj))) + 
+  ggplot(data = DGE_results_w_gene_anno, aes(log2FoldChange, -log10(padj), color = -log10(padj))) + 
     geom_hline(yintercept = 0) +
     geom_vline(xintercept = 0) +
     geom_hline(yintercept = -log10(0.05), color = "darkgray", lty = 2) +
     geom_vline(xintercept = 2, color = "darkgray", lty = 2) +
     geom_vline(xintercept = -2, color = "darkgray", lty = 2) +
-    geom_point(data = non_signficant_data, color = "gray") +
-    geom_point(data = signficant_data, size = 3) +
-    ggrepel::geom_label_repel(data = geom_label_data, mapping = aes(label = gene_name), color = "black", box.padding = unit(0.1, "in")) +
+    #geom_point(data = non_signficant_data, color = "gray") +
+    #geom_point(data = signficant_data, size = 3) +
+    geom_point(size = 3) +
+    #ggrepel::geom_label_repel(data = geom_label_data, mapping = aes(label = gene_name), color = "black", box.padding = unit(0.1, "in")) +
     theme_publication() +
-    scale_x_continuous(limits = c(-10, 10)) +
+    scale_x_continuous(limits = ggpmisc::symmetric_limits) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), 
           legend.direction = "vertical", 
