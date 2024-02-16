@@ -46,7 +46,7 @@ metadata_subset <-
   filter(`Sample ID` %in% colnames(tximport_object$counts))
 
 # Check if the sample IDs in the metadata are the same and in the same order as in the tximport object
-stopifnot(identical(metadata_subset$`Sample ID`, colnames(tximport_object$counts)))
+stopifnot(identical(as.character(metadata_subset$`Sample ID`), colnames(tximport_object$counts)))
 
 # DESeq2 dataset
 deseq2_object <- 
@@ -58,7 +58,8 @@ deseq2_object <-
 vst <- DESeq2::vst(deseq2_object, blind = TRUE)
   
 # Generate normalized counts
-norm_counts <- DESeq2::estimateSizeFactors(deseq2_object) %>% DESeq2::counts(normalized = T)
+norm_counts <- DESeq2::estimateSizeFactors(deseq2_object) %>% 
+               DESeq2::counts(normalized = T)
 
 # Generate log2 normalized counts + 1
 log2_norm_counts <- log2(norm_counts + 1)
@@ -77,10 +78,10 @@ colnames(tximport_object$counts) <- metadata_subset$`Sample ID`
 
 SummarizedExperiment_object <- 
   SummarizedExperiment(assays    = 
-                         list(norm_counts      = norm_counts[edb_gene_annotation$gene_id, metadata_subset$`Sample ID`],
-                              log2_norm_counts = log2_norm_counts[edb_gene_annotation$gene_id, metadata_subset$`Sample ID`],
-                              vst_counts       = vst_counts[edb_gene_annotation$gene_id, metadata_subset$`Sample ID`],
-                              raw_counts       = tximport_object$counts[edb_gene_annotation$gene_id, metadata_subset$`Sample ID`]),
+                         list(norm_counts      = norm_counts[edb_gene_annotation$gene_id,            as.character(metadata_subset$`Sample ID`)],
+                              log2_norm_counts = log2_norm_counts[edb_gene_annotation$gene_id,       as.character(metadata_subset$`Sample ID`)],
+                              vst_counts       = vst_counts[edb_gene_annotation$gene_id,             as.character(metadata_subset$`Sample ID`)],
+                              raw_counts       = tximport_object$counts[edb_gene_annotation$gene_id, as.character(metadata_subset$`Sample ID`)]),
                        rowData   = edb_gene_annotation, 
                        colData   = metadata_subset %>% column_to_rownames("Sample ID"))
 

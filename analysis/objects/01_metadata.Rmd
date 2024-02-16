@@ -1,6 +1,6 @@
 ---
 title:    "Ocampo Lab mouse reprogramming"
-subtitle: "Create metadata"
+subtitle: "Metadata"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
 output:
@@ -33,8 +33,10 @@ metadata <- readxl::read_xlsx("docs/metadata/metadata_mouse.xlsx")
 
 metadata <- 
   metadata %>% 
-  mutate(Tissue = factor(Tissue, levels = unique(Tissue))) %>% 
-  mutate(Genotype = factor(Genotype, levels = unique(Genotype)))
+  mutate(Tissue      = factor(Tissue, levels = unique(Tissue))) %>% 
+  mutate(Genotype    = factor(Genotype, levels = unique(Genotype))) %>% 
+  mutate(`Sample ID` = factor(`Sample ID`, levels = unique(`Sample ID`))) %>% 
+  mutate(Color       = factor(Color, levels = unique(Color)))
 
 ```
 

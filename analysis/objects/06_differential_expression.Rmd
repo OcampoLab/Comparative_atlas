@@ -1,6 +1,6 @@
 ---
 title:    "Ocampo Lab mouse reprogramming"
-subtitle: "Find differential expressed genes"
+subtitle: "Differential expressed genes"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
 output:
@@ -42,7 +42,7 @@ metadata_subset <-
   filter(`Sample ID` %in% colnames(tximport_object$counts))
   
 # Check if the sample IDs in the metadata are the same and in the same order as in the tximport object
-stopifnot(identical(metadata_subset$`Sample ID`, colnames(tximport_object$counts)))
+stopifnot(identical(as.character(metadata_subset$`Sample ID`), colnames(tximport_object$counts)))
   
 # DESeq2 dataset
 deseq2_object <- 
@@ -62,11 +62,12 @@ map(list("4Fj.vs.WT"  = c("4Fj",  "WT"),
   sample_subset <- 
     metadata_subset %>% 
     filter(Genotype %in% x) %>% 
-    pull(`Sample ID`)
+    pull(`Sample ID`) %>% 
+    as.character()
   
   # Subset the DESeq2 object and create new Genotype levels
-  deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% metadata_subset[metadata_subset$`Sample ID` %in% sample_subset, "Sample ID", drop = T]]
-  deseq2_object$Genotype <- factor(deseq2_object$Genotype, levels = x)
+  deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% sample_subset]
+  deseq2_object$Genotype <- factor(deseq2_object$Genotype, levels = x[2:1])
   
   deseq2 <- DESeq(object = deseq2_object, parallel = T, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
     
@@ -87,7 +88,7 @@ metadata_subset <-
   filter(`Sample ID` %in% colnames(tximport_object$counts))
   
 # Check if the sample IDs in the metadata are the same and in the same order as in the tximport object
-stopifnot(identical(metadata_subset$`Sample ID`, colnames(tximport_object$counts)))
+stopifnot(identical(as.character(metadata_subset$`Sample ID`), colnames(tximport_object$counts)))
   
 # DESeq2 dataset
 deseq2_object <- 
@@ -98,7 +99,7 @@ deseq2_object <-
 DGE_genotype_WT_tissue <- 
 map(list("4Fj.vs.WT_Kidney"          = c("4Fj",  "WT", "Kidney"),
          "4Fj.vs.WT_Liver"           = c("4Fj",  "WT", "Liver"),
-         "4Fj.vs.WT_Small_Intestine" = c("4Fj",  "WT", "Small Intestine"),
+         "4Fj.vs.WT_Small_intestine" = c("4Fj",  "WT", "Small intestine"),
          "4Fj.vs.WT_Heart"           = c("4Fj",  "WT", "Heart"),
          "4Fj.vs.WT_Brain"           = c("4Fj",  "WT", "Brain"),
          "4Fj.vs.WT_Skeletal_muscle" = c("4Fj",  "WT", "Skeletal muscle"),
@@ -106,21 +107,21 @@ map(list("4Fj.vs.WT_Kidney"          = c("4Fj",  "WT", "Kidney"),
 
          "4FsB.vs.WT_Kidney"          = c("4FsB",  "WT", "Kidney"),
          "4FsB.vs.WT_Liver"           = c("4FsB",  "WT", "Liver"),
-         "4FsB.vs.WT_Small_Intestine" = c("4FsB",  "WT", "Small Intestine"),
+         "4FsB.vs.WT_Small_intestine" = c("4FsB",  "WT", "Small intestine"),
          "4FsB.vs.WT_Heart"           = c("4FsB",  "WT", "Heart"),
          "4FsB.vs.WT_Brain"           = c("4FsB",  "WT", "Brain"),
          "4FsB.vs.WT_Skeletal_muscle" = c("4FsB",  "WT", "Skeletal muscle"),
 
          "4Fk.vs.WT_Kidney"          = c("4Fk",  "WT", "Kidney"),
          "4Fk.vs.WT_Liver"           = c("4Fk",  "WT", "Liver"),
-         "4Fk.vs.WT_Small_Intestine" = c("4Fk",  "WT", "Small Intestine"),
+         "4Fk.vs.WT_Small_intestine" = c("4Fk",  "WT", "Small intestine"),
          "4Fk.vs.WT_Heart"           = c("4Fk",  "WT", "Heart"),
          "4Fk.vs.WT_Brain"           = c("4Fk",  "WT", "Brain"),
          "4Fk.vs.WT_Skeletal_muscle" = c("4Fk",  "WT", "Skeletal muscle"),
 
          "4FsA.vs.WT_Kidney"          = c("4FsA",  "WT", "Kidney"),
          "4FsA.vs.WT_Liver"           = c("4FsA",  "WT", "Liver"),
-         "4FsA.vs.WT_Small_Intestine" = c("4FsA",  "WT", "Small Intestine"),
+         "4FsA.vs.WT_Small_intestine" = c("4FsA",  "WT", "Small intestine"),
          "4FsA.vs.WT_Heart"           = c("4FsA",  "WT", "Heart"),
          "4FsA.vs.WT_Brain"           = c("4FsA",  "WT", "Brain"),
          "4FsA.vs.WT_Skeletal_muscle" = c("4FsA",  "WT", "Skeletal muscle"),
@@ -136,8 +137,8 @@ map(list("4Fj.vs.WT_Kidney"          = c("4Fj",  "WT", "Kidney"),
     pull(`Sample ID`)
   
   # Subset the DESeq2 object and create new Genotype levels
-  deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% metadata_subset[metadata_subset$`Sample ID` %in% sample_subset, "Sample ID", drop = T]]
-  deseq2_object$Genotype <- factor(deseq2_object$Genotype, levels = x[1:2])
+  deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% sample_subset]
+  deseq2_object$Genotype <- factor(deseq2_object$Genotype, levels = x[2:1])
   
   deseq2 <- DESeq(object = deseq2_object, parallel = T, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
     
@@ -158,7 +159,7 @@ metadata_subset <-
   filter(`Sample ID` %in% colnames(tximport_object$counts))
   
 # Check if the sample IDs in the metadata are the same and in the same order as in the tximport object
-stopifnot(identical(metadata_subset$`Sample ID`, colnames(tximport_object$counts)))
+stopifnot(identical(as.character(metadata_subset$`Sample ID`), colnames(tximport_object$counts)))
   
 # DESeq2 dataset
 deseq2_object <- 
@@ -182,12 +183,12 @@ map(list(
          "4FsB.vs.4FsA_Liver" = c("4FsB", "4FsA", "Liver"),
          "4Fk.vs.4FsA_Liver"  = c("4Fk",  "4FsA", "Liver"),
 
-         "4Fj.vs.4FsB_Small_Intestine"  = c("4Fj",  "4FsB", "Small Intestine"),
-         "4Fj.vs.4Fk_Small_Intestine"   = c("4Fj",  "4Fk",  "Small Intestine"),
-         "4Fj.vs.4FsA_Small_Intestine"  = c("4Fj",  "4FsA", "Small Intestine"),
-         "4FsB.vs.4Fk_Small_Intestine"  = c("4FsB", "4Fk",  "Small Intestine"),
-         "4FsB.vs.4FsA_Small_Intestine" = c("4FsB", "4FsA", "Small Intestine"),
-         "4Fk.vs.4FsA_Small_Intestine"  = c("4Fk",  "4FsA", "Small Intestine"),
+         "4Fj.vs.4FsB_Small_intestine"  = c("4Fj",  "4FsB", "Small intestine"),
+         "4Fj.vs.4Fk_Small_intestine"   = c("4Fj",  "4Fk",  "Small intestine"),
+         "4Fj.vs.4FsA_Small_intestine"  = c("4Fj",  "4FsA", "Small intestine"),
+         "4FsB.vs.4Fk_Small_intestine"  = c("4FsB", "4Fk",  "Small intestine"),
+         "4FsB.vs.4FsA_Small_intestine" = c("4FsB", "4FsA", "Small intestine"),
+         "4Fk.vs.4FsA_Small_intestine"  = c("4Fk",  "4FsA", "Small intestine"),
 
          "4Fj.vs.4FsB_Heart"  = c("4Fj",  "4FsB", "Heart"),
          "4Fj.vs.4Fk_Heart"   = c("4Fj",  "4Fk",  "Heart"),
@@ -222,8 +223,8 @@ map(list(
     pull(`Sample ID`)
   
   # Subset the DESeq2 object and create new Genotype levels
-  deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% metadata_subset[metadata_subset$`Sample ID` %in% sample_subset, "Sample ID", drop = T]]
-  deseq2_object$Genotype <- factor(deseq2_object$Genotype, levels = x[1:2])
+  deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% sample_subset]
+  deseq2_object$Genotype <- factor(deseq2_object$Genotype, levels = x[2:1])
   
   deseq2 <- DESeq(object = deseq2_object, parallel = T, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
     
@@ -244,7 +245,7 @@ metadata_subset <-
   filter(`Sample ID` %in% colnames(tximport_object$counts))
   
 # Check if the sample IDs in the metadata are the same and in the same order as in the tximport object
-stopifnot(identical(metadata_subset$`Sample ID`, colnames(tximport_object$counts)))
+stopifnot(identical(as.character(metadata_subset$`Sample ID`), colnames(tximport_object$counts)))
   
 # DESeq2 dataset
 deseq2_object <- 
@@ -257,7 +258,7 @@ map(list(
   
   "WT_Kidney.vs.WT_other_tissues"          = c("WT", "Kidney"),
   "WT_Liver.vs.WT_other_tissues"           = c("WT", "Liver"),
-  "WT_Small_Intestine.vs.WT_other_tissues" = c("WT", "Small Intestine"),
+  "WT_Small_intestine.vs.WT_other_tissues" = c("WT", "Small intestine"),
   "WT_Heart.vs.WT_other_tissues"           = c("WT", "Heart"),
   "WT_Brain.vs.WT_other_tissues"           = c("WT", "Brain"),
   "WT_Skeletal_muscle.vs.WT_other_tissues" = c("WT", "Skeletal muscle"),
@@ -265,7 +266,7 @@ map(list(
   
   "4Fj_Kidney.vs.4Fj_other_tissues"          = c("4Fj", "Kidney"),
   "4Fj_Liver.vs.4Fj_other_tissues"           = c("4Fj", "Liver"),
-  "4Fj_Small_Intestine.vs.4Fj_other_tissues" = c("4Fj", "Small Intestine"),
+  "4Fj_Small_intestine.vs.4Fj_other_tissues" = c("4Fj", "Small intestine"),
   "4Fj_Heart.vs.4Fj_other_tissues"           = c("4Fj", "Heart"),
   "4Fj_Brain.vs.4Fj_other_tissues"           = c("4Fj", "Brain"),
   "4Fj_Skeletal_muscle.vs.4Fj_other_tissues" = c("4Fj", "Skeletal muscle"),
@@ -273,21 +274,21 @@ map(list(
   
   "4FsB_Kidney.vs.4FsB_other_tissues"          = c("4FsB", "Kidney"),
   "4FsB_Liver.vs.4FsB_other_tissues"           = c("4FsB", "Liver"),
-  "4FsB_Small_Intestine.vs.4FsB_other_tissues" = c("4FsB", "Small Intestine"),
+  "4FsB_Small_intestine.vs.4FsB_other_tissues" = c("4FsB", "Small intestine"),
   "4FsB_Heart.vs.4FsB_other_tissues"           = c("4FsB", "Heart"),
   "4FsB_Brain.vs.4FsB_other_tissues"           = c("4FsB", "Brain"),
   "4FsB_Skeletal_muscle.vs.4FsB_other_tissues" = c("4FsB", "Skeletal muscle"),
   
   "4Fk_Kidney.vs.4Fk_other_tissues"          = c("4Fk", "Kidney"),
   "4Fk_Liver.vs.4Fk_other_tissues"           = c("4Fk", "Liver"),
-  "4Fk_Small_Intestine.vs.4Fk_other_tissues" = c("4Fk", "Small Intestine"),
+  "4Fk_Small_intestine.vs.4Fk_other_tissues" = c("4Fk", "Small intestine"),
   "4Fk_Heart.vs.4Fk_other_tissues"           = c("4Fk", "Heart"),
   "4Fk_Brain.vs.4Fk_other_tissues"           = c("4Fk", "Brain"),
   "4Fk_Skeletal_muscle.vs.4Fk_other_tissues" = c("4Fk", "Skeletal muscle"),
   
   "4FsA_Kidney.vs.4FsA_other_tissues"          = c("4FsA", "Kidney"),
   "4FsA_Liver.vs.4FsA_other_tissues"           = c("4FsA", "Liver"),
-  "4FsA_Small_Intestine.vs.4FsA_other_tissues" = c("4FsA", "Small Intestine"),
+  "4FsA_Small_intestine.vs.4FsA_other_tissues" = c("4FsA", "Small intestine"),
   "4FsA_Heart.vs.4FsA_other_tissues"           = c("4FsA", "Heart"),
   "4FsA_Brain.vs.4FsA_other_tissues"           = c("4FsA", "Brain"),
   "4FsA_Skeletal_muscle.vs.4FsA_other_tissues" = c("4FsA", "Skeletal muscle"),
@@ -304,10 +305,10 @@ map(list(
     pull(`Sample ID`)
   
   # Subset the DESeq2 object and create new Genotype levels
-  deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% metadata_subset[metadata_subset$`Sample ID` %in% sample_subset, "Sample ID", drop = T]]
-  deseq2_object$Tissue <- factor(deseq2_object$Tissue, levels = c(x[2], "Other tissues"))
+  deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% sample_subset]
+  deseq2_object$Tissue <- factor(deseq2_object$Tissue, levels = c("Other tissues", x[2]))
   deseq2_object$Tissue <- deseq2_object$Tissue %>% str_replace_na("Other tissues")
-  deseq2_object$Tissue <- factor(deseq2_object$Tissue, levels = c(x[2], "Other tissues"))
+  deseq2_object$Tissue <- factor(deseq2_object$Tissue, levels = c("Other tissues", x[2]))
   
   deseq2 <- DESeq(object = deseq2_object, parallel = T, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
     

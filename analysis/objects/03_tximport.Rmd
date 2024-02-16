@@ -39,7 +39,7 @@ salmon_files <-
 
 # Order to match with metadata and remove samples that were excluded before alignment
 salmon_files <-
-  salmon_files[metadata$`Sample ID`] %>% 
+  salmon_files[as.character(metadata$`Sample ID`)] %>% 
   na.omit
 
 # Transcript ID to gene ID table

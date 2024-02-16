@@ -4,7 +4,14 @@
 require(tidyverse)
 require(ggthemes)
 
-pca_transformed_counts_plot <- function(pca_results_object, metadata, PCs, color_by, color_palette, color_column = FALSE, color_column_name){
+pca_transformed_counts_plot <- function(pca_results_object, 
+                                        metadata, 
+                                        PCs, 
+                                        color_by, 
+                                        color_palette,
+                                        color_column_name,
+                                        color_column = FALSE 
+                                        ){
   
   principal_components_df <- pca_results_object
   

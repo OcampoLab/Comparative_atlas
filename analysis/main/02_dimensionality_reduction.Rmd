@@ -93,7 +93,7 @@ map(list("PC1.vs.PC2" = c("PC1", "PC2"),
 PCA_plot_by_tissue <- 
 map(list("Kidney"          = "Kidney",
          "Liver"           = "Liver",
-         "Small Intestine" = "Small Intestine",
+         "Small intestine" = "Small intestine",
          "Heart"           = "Heart",
          "Brain"           = "Brain",
          "Skeletal muscle" = "Skeletal muscle",
@@ -121,14 +121,18 @@ map(list("Kidney"          = "Kidney",
 })
 
 PCA_plot_tissue <-
-  PCA_plot_by_tissue$Kidney + 
-  PCA_plot_by_tissue$Liver +
-  PCA_plot_by_tissue$`Small Intestine` +
-  PCA_plot_by_tissue$Heart +
-  PCA_plot_by_tissue$Brain +
-  PCA_plot_by_tissue$`Skeletal muscle` +
-  PCA_plot_by_tissue$Spleen +
-  patchwork::plot_layout(nrow = 2)
+  ggpubr::ggarrange(  
+    PCA_plot_by_tissue$Kidney,
+    PCA_plot_by_tissue$Liver,
+    PCA_plot_by_tissue$`Small intestine`,
+    PCA_plot_by_tissue$Heart,
+    PCA_plot_by_tissue$Brain,
+    PCA_plot_by_tissue$`Skeletal muscle`,
+    PCA_plot_by_tissue$Spleen, 
+    nrow          = 2,
+    ncol          = 4,
+    common.legend = TRUE, 
+    legend        = "bottom")
 
 ```
 
@@ -192,6 +196,7 @@ function(rnaseq_object, metadata, fill_column, perplexity_vector) {
 
 }
 
+set.seed(123)
 tSNE_plots <- 
   tSNE_plot_function(rnaseq_object     = assay(SummarizedExperiment_object, "vst_counts"), 
                      metadata          = colData(SummarizedExperiment_object), 
@@ -208,6 +213,7 @@ UMAP_plot_function <-
 function(rnaseq_object, metadata, fill_column, n_neighbors_vector) {
   
   # Creating the UMAP fit 
+  set.seed(123)
   UMAP_fit <-
     map(n_neighbors_vector %>% set_names(.,.), function(x){
       
@@ -264,6 +270,7 @@ function(rnaseq_object, metadata, fill_column, n_neighbors_vector) {
 
 }
 
+set.seed(123)
 UMAP_plots <- 
   UMAP_plot_function(rnaseq_object     = assay(SummarizedExperiment_object, "vst_counts"), 
                      metadata          = colData(SummarizedExperiment_object), 
@@ -276,19 +283,19 @@ UMAP_plots <-
 # Save plots
 ```{r}
 
-pdf(file = "output/figures/PCA_plot_combined.pdf", width = 10, height = 18)
+pdf(file = "output/figures/02_dimensionality_reduction/PCA_plot_combined.pdf", width = 10, height = 18)
 PCA_plot_combined$PC1.vs.PC2 / PCA_plot_combined$PC1.vs.PC3 / PCA_plot_combined$PC2.vs.PC3
 dev.off()
 
-pdf(file = "output/figures/PCA_plot_tissue.pdf", width = 15, height = 9)
+pdf(file = "output/figures/02_dimensionality_reduction/PCA_plot_tissue.pdf", width = 15, height = 8)
 PCA_plot_tissue
 dev.off()
 
-pdf(file = "output/figures/tSNE_plots.pdf", width = 12, height = 7)
+pdf(file = "output/figures/02_dimensionality_reduction/tSNE_plots.pdf", width = 12, height = 7)
 tSNE_plots
 dev.off()
 
-pdf(file = "output/figures/UMAP_plots.pdf", width = 12, height = 7)
+pdf(file = "output/figures/02_dimensionality_reduction/UMAP_plots.pdf", width = 12, height = 7)
 UMAP_plots
 dev.off()
 
