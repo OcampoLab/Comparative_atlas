@@ -50,7 +50,7 @@ ensembldb::ensDbFromGtf(gtf           = gtf,
 
 ```
 
-# Create table with Capreolus capreolus gene names
+# Create table with gene names
 ```{r}
 
 # Loading ensembl gene database
