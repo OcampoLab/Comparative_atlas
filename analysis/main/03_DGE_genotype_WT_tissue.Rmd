@@ -39,6 +39,9 @@ load(file = "output/database/SummarizedExperiment_object.RData")
 # DGE results
 load(file = "output/database/DGE_results.RData")
 
+# Gene annotation
+load(file = "output/database/edb_gene_annotation.RData")
+
 ```
 
 # Load functions
@@ -236,6 +239,53 @@ map(c("4Fj", '4FsB', "4Fk", "4FsA") %>% set_names(.,.), function(x){
   
   })
 
+
+#################################
+# gprofiler2
+#################################
+# enrichGO upregulated 
+enrichGO_clusters_upregulated <- 
+furrr::future_map(c("4Fj", '4FsB', "4Fk", "4FsA") %>% set_names(., paste(., "upregulated")), function(x){
+  
+  DGE_results_list <- 
+    DGE_genotype_WT_tissue_results[names(DGE_genotype_WT_tissue_results) %>% .[str_detect(., x)]] %>% 
+    map(~ .x$geneID_upregulated)
+  
+  names(DGE_results_list) <- 
+    paste(str_remove(names(DGE_results_list), ".*.vs.WT_") %>% str_replace_all("_", " "),
+          x,
+          "upregulated")
+  
+    gprofiler2::gost(query                       = DGE_genotype_WT_tissue_results$`4Fj.vs.WT_Heart`$geneID_upregulated, 
+                   organism                    = "mmusculus", 
+                   significant                 = T, 
+                   user_threshold              = 0.05, 
+                   correction_method           = "bonferroni", 
+                   exclude_iea                 = T, 
+                   measure_underrepresentation = F, 
+                   highlight                   = T, 
+                   custom_bg                   = unique(na.omit(edb_gene_annotation$gene_id)))
+  
+})  
+
+gprofiler2_upregulated_cluster1 <- 
+  gprofiler2::gost(query                       = DGE_genotype_WT_tissue_results$`4Fj.vs.WT_Heart`$geneID_upregulated, 
+                   organism                    = "mmusculus", 
+                   significant                 = T, 
+                   user_threshold              = 0.05, 
+                   correction_method           = "bonferroni", 
+                   exclude_iea                 = T, 
+                   measure_underrepresentation = F, 
+                   highlight                   = T, 
+                   custom_bg                   = unique(na.omit(edb_gene_annotation$gene_id)))
+
+gprofiler2_upregulated_cluster1_plot <- 
+gprofiler2_upregulated_cluster1$result %>% 
+  mutate(p_adjust = p.adjust(p_value, "bonferroni")) %>% 
+  filter(p_adjust < 0.05) %>% 
+  filter(term_size < 500) %>% 
+  filter(!source %in% c("TF")) %>% 
+  ggplot(aes(-log10(p_adjust), term_name, fill = -log10(p_adjust))) + geom_col() + facet_grid(source ~ ., scales = "free", space = "free") + theme_publication() + scale_fill_distiller(palette = "Reds", direction = 1) + theme(strip.text.y = element_text(angle = 0, hjust = 0))
 
 #################################
 # enrichGO
