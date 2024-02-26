@@ -8,9 +8,10 @@ theme_publication <- function(base_size = 14) {
   (theme_foundation(base_size = base_size) +
      theme(
        plot.title = element_text(
-         size       = rel(0.9),
-         hjust      = 0,
-         vjust      = 0
+         size  = rel(0.9),
+         hjust = 0,
+         vjust = 0,
+         face  = "bold"
        ),
        text             = element_text(),
        panel.background = element_rect(colour = NA),

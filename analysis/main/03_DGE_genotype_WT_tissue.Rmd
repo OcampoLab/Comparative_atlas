@@ -243,49 +243,111 @@ map(c("4Fj", '4FsB', "4Fk", "4FsA") %>% set_names(.,.), function(x){
 #################################
 # gprofiler2
 #################################
-# enrichGO upregulated 
-enrichGO_clusters_upregulated <- 
-furrr::future_map(c("4Fj", '4FsB', "4Fk", "4FsA") %>% set_names(., paste(., "upregulated")), function(x){
-  
-  DGE_results_list <- 
-    DGE_genotype_WT_tissue_results[names(DGE_genotype_WT_tissue_results) %>% .[str_detect(., x)]] %>% 
-    map(~ .x$geneID_upregulated)
-  
-  names(DGE_results_list) <- 
-    paste(str_remove(names(DGE_results_list), ".*.vs.WT_") %>% str_replace_all("_", " "),
-          x,
-          "upregulated")
-  
-    gprofiler2::gost(query                       = DGE_genotype_WT_tissue_results$`4Fj.vs.WT_Heart`$geneID_upregulated, 
-                   organism                    = "mmusculus", 
-                   significant                 = T, 
-                   user_threshold              = 0.05, 
-                   correction_method           = "bonferroni", 
-                   exclude_iea                 = T, 
-                   measure_underrepresentation = F, 
-                   highlight                   = T, 
-                   custom_bg                   = unique(na.omit(edb_gene_annotation$gene_id)))
-  
-})  
 
-gprofiler2_upregulated_cluster1 <- 
-  gprofiler2::gost(query                       = DGE_genotype_WT_tissue_results$`4Fj.vs.WT_Heart`$geneID_upregulated, 
-                   organism                    = "mmusculus", 
-                   significant                 = T, 
-                   user_threshold              = 0.05, 
-                   correction_method           = "bonferroni", 
-                   exclude_iea                 = T, 
-                   measure_underrepresentation = F, 
-                   highlight                   = T, 
-                   custom_bg                   = unique(na.omit(edb_gene_annotation$gene_id)))
+future::plan("multisession", workers = 26)
 
-gprofiler2_upregulated_cluster1_plot <- 
-gprofiler2_upregulated_cluster1$result %>% 
-  mutate(p_adjust = p.adjust(p_value, "bonferroni")) %>% 
-  filter(p_adjust < 0.05) %>% 
-  filter(term_size < 500) %>% 
-  filter(!source %in% c("TF")) %>% 
-  ggplot(aes(-log10(p_adjust), term_name, fill = -log10(p_adjust))) + geom_col() + facet_grid(source ~ ., scales = "free", space = "free") + theme_publication() + scale_fill_distiller(palette = "Reds", direction = 1) + theme(strip.text.y = element_text(angle = 0, hjust = 0))
+gprofiler2_upregulated_plots <- 
+  furrr::future_map2(DGE_genotype_WT_tissue_results, names(DGE_genotype_WT_tissue_results), function(x, y){
+    
+    gprofiler2_clusters <- 
+      gprofiler2::gost(query                       = x$geneID_upregulated, 
+                       organism                    = "mmusculus", 
+                       significant                 = T, 
+                       user_threshold              = 0.05, 
+                       correction_method           = "bonferroni", 
+                       exclude_iea                 = T, 
+                       measure_underrepresentation = F, 
+                       highlight                   = T, 
+                       custom_bg                   = unique(na.omit(edb_gene_annotation$gene_id)))
+    
+    gprofiler2_plot_data <- 
+      gprofiler2_clusters$result %>% 
+      mutate(p_adjust = p.adjust(p_value, "bonferroni")) %>% 
+      filter(p_adjust < 0.05) %>% 
+      filter(term_size < 1000) %>% 
+      filter(!source %in% c("TF")) %>% 
+      arrange(dplyr::desc(p_adjust)) %>% 
+      tail(25) %>% 
+      mutate(term_name = factor(term_name, levels = unique(term_name)))
+    
+    gprofiler2_plot <- 
+      ggplot(data    = gprofiler2_plot_data, 
+             mapping = aes(x = -log10(p_adjust), y = term_name, fill = -log10(p_adjust), label = paste0(intersection_size,"/", term_size))) + 
+      geom_col(show.legend = F) + 
+      geom_text(mapping = aes(x = -log10(p_adjust) + .2), hjust = 0) +
+      facet_grid(source ~ ., scales = "free", space = "free") + 
+      theme_publication() + 
+      scale_fill_distiller(palette = "Reds", direction = 1) + 
+      theme(strip.text.y       = element_text(angle = 0, hjust = 0), 
+            panel.grid.minor.y = element_blank(), 
+            panel.grid.major.y = element_blank(), 
+            axis.title.y       = element_blank()) +
+      scale_x_continuous(expand = expansion(mult = c(0, .2))) +
+      labs(x        = "-Log10(adjusted p-value)", 
+           fill     = "-Log10(adjusted p-value)", 
+           title    = "g:Profiler functional enrichment", 
+           subtitle = paste0("Upregulated genes in ", 
+                             str_remove(y, ".vs.WT_.*"), 
+                             "\n", 
+                             "Query size = ", 
+                             unique(gprofiler2_plot_data$query_size), 
+                             " genes"))
+    
+    return(gprofiler2_plot)
+  })  
+
+gprofiler2_downregulated_plots <- 
+  furrr::future_map2(DGE_genotype_WT_tissue_results, names(DGE_genotype_WT_tissue_results), function(x, y){
+    
+    gprofiler2_clusters <- 
+      gprofiler2::gost(query                       = x$geneID_downregulated, 
+                       organism                    = "mmusculus", 
+                       significant                 = T, 
+                       user_threshold              = 0.05, 
+                       correction_method           = "bonferroni", 
+                       exclude_iea                 = T, 
+                       measure_underrepresentation = F, 
+                       highlight                   = T, 
+                       custom_bg                   = unique(na.omit(edb_gene_annotation$gene_id)))
+    
+    gprofiler2_plot_data <- 
+      gprofiler2_clusters$result %>% 
+      mutate(p_adjust = p.adjust(p_value, "bonferroni")) %>% 
+      filter(p_adjust < 0.05) %>% 
+      filter(term_size < 1000) %>% 
+      filter(!source %in% c("TF")) %>% 
+      arrange(dplyr::desc(p_adjust)) %>% 
+      tail(25) %>% 
+      mutate(term_name = factor(term_name, levels = unique(term_name)))
+    
+    gprofiler2_plot <- 
+      ggplot(data    = gprofiler2_plot_data, 
+             mapping = aes(x = -log10(p_adjust), y = term_name, fill = -log10(p_adjust), label = paste0(intersection_size,"/", term_size))) + 
+      geom_col(show.legend = F) + 
+      geom_text(mapping = aes(x = -log10(p_adjust) + .2), hjust = 0) +
+      facet_grid(source ~ ., scales = "free", space = "free") + 
+      theme_publication() + 
+      scale_fill_distiller(palette = "Reds", direction = 1) + 
+      theme(strip.text.y       = element_text(angle = 0, hjust = 0), 
+            panel.grid.minor.y = element_blank(), 
+            panel.grid.major.y = element_blank(), 
+            axis.title.y       = element_blank()) +
+      scale_x_continuous(expand = expansion(mult = c(0, .2))) +
+      labs(x        = "-Log10(adjusted p-value)", 
+           fill     = "-Log10(adjusted p-value)", 
+           title    = "g:Profiler functional enrichment", 
+           subtitle = paste0("Downregulated genes in ", 
+                             str_remove(y, ".vs.WT_.*"), 
+                             "\n", 
+                             "Query size = ", 
+                             unique(gprofiler2_plot_data$query_size), 
+                             " genes"))
+    
+    return(gprofiler2_plot)
+  })  
+
+future::plan("sequential")
+
 
 #################################
 # enrichGO
@@ -519,6 +581,36 @@ median_expression_plot
 enrichGO_clusters_dotplot
 enrichKEGG_clusters_dotplot
 volcano_plots
+
+gprofiler2_upregulated_plots$`4Fj.vs.WT_Kidney`
+gprofiler2_downregulated_plots$`4Fj.vs.WT_Kidney`
+
+
+pdf(file = "output/figures/03_DGE_analysis/median_expression_plot.pdf", width = 8, height = 7)
+median_expression_plot
+dev.off()
+
+pdf(file = "output/figures/03_DGE_analysis/enrichGO_clusters.pdf", width = 13, height = 7)
+enrichGO_clusters_dotplot$enrichGO_clusters_upregulated + enrichGO_clusters_dotplot$enrichGO_clusters_downregulated
+dev.off()
+
+pdf(file = "output/figures/03_DGE_analysis/volcano_plots.pdf", width = 21, height = 10)
+patchwork::wrap_plots(volcano_plots)
+dev.off()
+
+pdf(file = "output/figures/03_DGE_analysis/gprofiler2_plot1.pdf", width = 15, height = 8)
+(gprofiler2_upregulated_plots$`4F D1 +HS 4h vs. Control D1 +HS 4h` / (ggplot() + theme_void())) + plot_layout(heights = c(0.1, 1)) |
+(gprofiler2_downregulated_plots$`4F D1 +HS 4h vs. Control D1 +HS 4h`)
+dev.off()
+
+pdf(file = "output/figures/03_DGE_analysis/gprofiler2_plot2.pdf", width = 9, height = 5)
+gprofiler2_downregulated_plots$`4F D1 +HS 48h vs. Control D1 +HS 48h`
+dev.off()
+
+pdf(file = "output/figures/03_DGE_analysis/gprofiler2_plot3.pdf", width = 7, height = 2.5)
+gprofiler2_upregulated_plots$`4F D10 -HS 48h vs. Control D10 -HS 48h`
+dev.off()
+
 
 ```
 
