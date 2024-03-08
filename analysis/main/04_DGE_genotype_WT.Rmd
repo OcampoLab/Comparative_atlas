@@ -1,0 +1,764 @@
+---
+title:    "Ocampo Lab mouse reprogramming"
+subtitle: "DGE results - Comparison between genotype and WT with tissues combined"
+author:   "Author: João Agostinho de Sousa"
+date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    theme: default
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+# Load libraries
+```{r}
+
+library(tidyverse)
+library(SummarizedExperiment)
+library(patchwork)
+library(UpSetR)
+library(clusterProfiler)
+library(AnnotationDbi)
+library(org.Mm.eg.db)
+
+```
+
+# Load objects
+```{r}
+
+# Log2 normalized counts object
+load(file = "output/database/log2_norm_counts_object.RData")
+
+# SummarizedExperiment object
+load(file = "output/database/SummarizedExperiment_object.RData")
+
+# DGE results
+load(file = "output/database/DGE_results.RData")
+
+# Gene annotation
+load(file = "output/database/edb_gene_annotation.RData")
+
+```
+
+# Load functions
+```{r}
+
+# Theme publication
+source(file = "analysis/functions/theme_publication.R")
+
+```
+
+# Differental expressed genes between genotype and WT with tissues combined
+```{r}
+
+# Results from the DGE genotype vs. WT with tissues combined results
+DGE_genotype_WT_results <- 
+map2(DGE_results$DGE_genotype_WT, names(DGE_results$DGE_genotype_WT), function(x, y){
+  
+  DGE_results_filtered <- 
+    x %>% 
+    as.data.frame() %>% 
+    filter(padj < 0.05 & abs(log2FoldChange) > 2) %>% 
+    mutate(log2FoldChange_direction = case_when(log2FoldChange < 0 ~ "negative",
+                                                log2FoldChange > 0 ~ "positive",
+                                                TRUE ~ NA_character_))
+  
+  geneID_upregulated <- 
+    DGE_results_filtered %>% 
+    filter(log2FoldChange_direction == "positive") %>% 
+    rownames() %>% 
+    unique
+  
+  geneID_downregulated <- 
+    DGE_results_filtered %>% 
+    filter(log2FoldChange_direction == "negative") %>% 
+    rownames() %>% 
+    unique
+  
+  up_downregulated_table <- 
+    tibble("Upregulated"   = length(geneID_upregulated),
+           "Downregulated" = length(geneID_downregulated),
+           Genotype        = str_remove(y, ".vs.WT"),
+           Control         = str_remove(y, ".*.vs.") %>% str_remove("_.*"))
+  
+  geneID_up_downregulated <- 
+    DGE_results_filtered %>% 
+    rownames_to_column("gene_id") %>% 
+    dplyr::select(gene_id, log2FoldChange_direction) %>% 
+    mutate(Condition = paste(str_remove(y, ".*.vs.WT") %>% str_replace_all("_", " "), str_remove(y, ".vs.WT"))) %>% 
+    mutate(log2FoldChange_direction = case_when(log2FoldChange_direction == "positive" ~ "Upregulated",
+                                                log2FoldChange_direction == "negative" ~ "Downregulated",
+                                                TRUE ~ NA_character_
+                                                ))
+  
+  return(
+  list("geneID_upregulated"      = geneID_upregulated,
+       "geneID_downregulated"    = geneID_downregulated,
+       "up_downregulated_table"  = up_downregulated_table,
+       "geneID_up_downregulated" = geneID_up_downregulated)
+  )
+})
+
+# Dataframe with the number of differentially expressed genes for each condition
+DGE_number_df <- 
+  map_dfr(DGE_genotype_WT_results, ~ .x$up_downregulated_table) %>% 
+  gather(Direction, `Number of genes`, -Genotype, -Control) %>% 
+  mutate(Direction = factor(Direction, levels = rev(c("Upregulated", "Downregulated")))) %>% 
+  mutate(Genotype = factor(Genotype, levels = levels(SummarizedExperiment_object$Genotype)))
+
+# Plot with the number of differentially expressed genes for each condition
+plot_DGE_number <- 
+  ggplot(data = DGE_number_df, aes(x = Genotype, y = `Number of genes`, fill = Direction)) + 
+    geom_col() + 
+    geom_text(data = 
+                DGE_number_df %>% 
+                group_by(Genotype, Control) %>% 
+                summarise(`Total number of genes` = sum(`Number of genes`)) %>% 
+                ungroup, 
+              mapping     = aes(x = Genotype, y = `Total number of genes` + 70, label = `Total number of genes`), 
+              size        = 4.5, 
+              inherit.aes = F) +
+    scale_fill_manual(values = c("Upregulated"   = "#4292C6",
+                                 "Downregulated" = "#EF3B2C")) +
+    theme_publication() +
+    theme(panel.grid.major.x = element_blank(),
+          panel.grid.minor   = element_blank(),
+          panel.border       = element_blank(), 
+          strip.placement    = "ouside",
+          plot.title         = element_text(face = "bold"),
+          legend.title       = element_blank(),
+          strip.text.y       = element_text(angle = 0, hjust = 0), 
+          axis.title.x       = element_blank()) +
+    scale_y_continuous(expand = c(0,0), limits = c(0, 1150)) +
+    labs(title = "Number of differentially expressed genes\nbetween 4F strains and wild type (WT)")
+
+# Dataframe with the percentage of differentially expressed genes for each condition
+DGE_pct_df <-
+  DGE_number_df %>%
+  group_by(Genotype, Control) %>% 
+  mutate(`Gene percentage (%)` = `Number of genes`*100/sum(`Number of genes`)) %>%
+  ungroup
+
+# Plot with the percentage of differentially expressed genes for each condition
+plot_DGE_pct <- 
+  ggplot(data = DGE_pct_df, aes(x = Genotype, y = `Gene percentage (%)`, fill = Direction)) + 
+  geom_col() + 
+  geom_text(data = 
+              DGE_pct_df %>% 
+              filter(Direction == "Upregulated"), 
+            mapping = aes(x     = Genotype, 
+                          y     = `Gene percentage (%)`- 10, 
+                          label = paste0(`Number of genes`, "\n", "(", round(`Gene percentage (%)`), "%)")),
+            size    = 4.5, 
+            color   = "black") +
+  geom_text(data = 
+              DGE_pct_df %>% 
+              filter(Direction == "Downregulated"), 
+            mapping = aes(x     = Genotype, 
+                          y     = 100-`Gene percentage (%)`+ 10, 
+                          label = paste0(`Number of genes`, "\n", "(", round(`Gene percentage (%)`), "%)")),
+            size  = 4.5, 
+            color = "white") +
+  scale_fill_manual(values = c("Upregulated"   = "#4292C6",
+                               "Downregulated" = "#EF3B2C")) +
+  theme_publication() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border     = element_blank(), 
+        strip.placement  = "ouside", 
+        plot.title       = element_text(face = "bold"),
+        legend.title     = element_blank(),
+        strip.text.y     = element_text(angle = 0, hjust = 0), 
+        axis.title.x     = element_blank()) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
+  labs(title = "Percentage of differentially expressed genes\nbetween 4F strains and wild type (WT)")
+
+```
+
+# Shared DEGs
+```{r}
+
+# Number of differentially expressed genes shared in all strains
+shared_DGE <- 
+  map(c("Upregulated", "Downregulated") %>% set_names(.,.), 
+    ~ map_dfr(DGE_genotype_WT_results, ~ rbind(.x$geneID_up_downregulated)) %>% 
+    filter(log2FoldChange_direction == .x) %>% 
+    dplyr::select(gene_id, Condition) %>% 
+    spread(Condition, -gene_id) %>% 
+    mutate_at(.vars = vars(-c("gene_id")), .funs = ~ as.numeric(as.factor(.x)) %>% replace_na(replace = 0))
+  )
+
+# Gene Ids for the genes that are differentially expressed in all strains
+genes_id_shared_DGE <- 
+  map(shared_DGE, function(x){
+      matrix <- x %>% dplyr::select(-gene_id) %>% as.matrix()
+      genesIDs <- x[rowSums(matrix) == ncol(matrix),]$gene_id %>% unique
+      
+      return(genesIDs)
+      })
+
+# Scaled
+heatmap_plot_data <- 
+  map(genes_id_shared_DGE,
+  ~log2_norm_counts_object$log2_norm_counts_long %>% 
+  filter(gene_id %in% .x) %>% 
+  mutate(gene_name = case_when(is.na(gene_name) ~ gene_id,
+                               TRUE             ~ gene_name)) %>% 
+  group_by(Genotype, gene_id, gene_name) %>%
+  summarise(mean_log2_norm_counts = mean(log2_norm_counts, na.rm = T)) %>%
+  ungroup %>% 
+  group_by(gene_id, gene_name) %>%
+  mutate(scaled_mean_log2_norm_counts = scale(mean_log2_norm_counts)) %>%
+  ungroup)
+
+shared_DGE_heatmap <-
+map(heatmap_plot_data,
+  ~ ggplot(data    = .x,
+       mapping = aes(Genotype, fct_rev(gene_name), fill = scaled_mean_log2_norm_counts)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  theme_publication() +
+  scale_x_discrete(expand = c(0,0)) + 
+  scale_y_discrete(expand = c(0,0), position = "right") +
+  scale_fill_distiller(palette = "RdBu", na.value = "white") +
+  theme(axis.text.x       = element_text(hjust = 1, vjust = 1, angle = 45), 
+        axis.title.x      = element_blank(),
+        axis.title.y      = element_blank(), 
+        axis.ticks.x      = element_blank(),
+        axis.ticks.y      = element_blank(), 
+        strip.text.y.left = element_text(hjust = 1, angle = 0)) +
+  labs(fill = "Row Z-score") +
+  guides(fill = guide_colourbar(title.position = "top", title.hjust = 0.5, barwidth = unit(1.5, "in")))
+  )
+
+# Scaled by tissue
+heatmap_plot_by_tissue_data <- 
+  map(genes_id_shared_DGE,
+  ~log2_norm_counts_object$log2_norm_counts_long %>% 
+  filter(gene_id %in% .x) %>% 
+  mutate(gene_name = case_when(is.na(gene_name) ~ gene_id,
+                               TRUE             ~ gene_name)) %>%
+  group_by(Genotype, Tissue, gene_id, gene_name) %>%
+  summarise(mean_log2_norm_counts = mean(log2_norm_counts, na.rm = T)) %>%
+  ungroup %>% 
+  group_by(Tissue, gene_id, gene_name) %>%
+  mutate(scaled_mean_log2_norm_counts = scale(mean_log2_norm_counts)) %>%
+  ungroup)
+
+shared_DGE_by_tissue_heatmap <-
+map(heatmap_plot_by_tissue_data,
+  ~ ggplot(data    = .x,
+       mapping = aes(Genotype, fct_rev(gene_name), fill = scaled_mean_log2_norm_counts)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  theme_publication() +
+  scale_x_discrete(expand = c(0,0)) + 
+  scale_y_discrete(expand = c(0,0), position = "right") +
+  scale_fill_distiller(palette = "RdBu", na.value = "white") +
+  facet_grid(. ~ Tissue, scales = "free", space = "free", switch = "y") +
+  theme(axis.text.x       = element_text(hjust = 1, vjust = 1, angle = 45), 
+        axis.title.x      = element_blank(),
+        axis.title.y      = element_blank(), 
+        axis.ticks.x      = element_blank(),
+        axis.ticks.y      = element_blank(), 
+        strip.text.y.left = element_text(hjust = 1, angle = 0)) +
+  labs(fill = "Row Z-score") +
+  guides(fill = guide_colourbar(title.position = "top", title.hjust = 0.5, barwidth = unit(1.5, "in")))
+  )
+
+#################################
+# gprofiler2
+#################################
+
+# Ensembl IDs of the OSKM genes
+OSKM_gene_ids <- 
+  edb_gene_annotation %>% 
+  filter(gene_name %in% c("Pou5f1", "Sox2", "Myc", "Klf4")) %>% 
+  pull(gene_id) %>% 
+  unique()
+
+gprofiler2_clusters <- 
+  gprofiler2::gost(query                       = setdiff(genes_id_shared_DGE$Downregulated, OSKM_gene_ids), 
+                   organism                    = "mmusculus", 
+                   significant                 = T, 
+                   user_threshold              = 0.05, 
+                   correction_method           = "bonferroni", 
+                   exclude_iea                 = T, 
+                   measure_underrepresentation = F, 
+                   highlight                   = T, 
+                   custom_bg                   = unique(na.omit(edb_gene_annotation$gene_id)))
+    
+gprofiler2_plot_data <- 
+  gprofiler2_clusters$result %>% 
+  mutate(p_adjust = p.adjust(p_value, "bonferroni")) %>% 
+  filter(p_adjust < 0.05) %>% 
+  filter(term_size < 5000) %>% 
+  filter(!source %in% c("TF")) %>%
+  arrange(dplyr::desc(p_adjust)) %>% 
+  tail(25) %>% 
+  mutate(term_name = factor(term_name, levels = unique(term_name)))
+    
+gprofiler2_shared_DGE_downregulated_plot <- 
+  ggplot(data    = gprofiler2_plot_data, 
+         mapping = aes(x = -log10(p_adjust), y = term_name, fill = -log10(p_adjust), label = paste0(intersection_size,"/", term_size))) + 
+  geom_col(show.legend = F) + 
+  geom_text(mapping = aes(x = -log10(p_adjust) + .4), hjust = 0) +
+  facet_grid(source ~ ., scales = "free", space = "free") + 
+  theme_publication() + 
+  scale_fill_distiller(palette = "Reds", direction = 1) + 
+  theme(strip.text.y       = element_text(angle = 0, hjust = 0), 
+        panel.grid.minor.y = element_blank(), 
+        panel.grid.major.y = element_blank(), 
+        axis.title.y       = element_blank()) +
+  scale_x_continuous(expand = expansion(mult = c(0, .4))) +
+  labs(x        = "-Log10(adjusted p-value)", 
+       fill     = "-Log10(adjusted p-value)", 
+       title    = "g:Profiler functional enrichment", 
+       subtitle = paste0("Downregulated genes in 4F strains", 
+                         "\n", 
+                         "Query size = ", 
+                         unique(gprofiler2_plot_data$query_size), 
+                         " genes"))
+
+```
+
+# Genotype vs. WT comparison
+```{r}
+
+#################################
+# Median expression of DEGs
+#################################
+
+# Median expression of the differentially expressed genes
+median_expression_table <- 
+  map2_dfr(DGE_genotype_WT_results, names(DGE_genotype_WT_results),
+    ~ log2_norm_counts_object$log2_norm_counts_long %>% 
+      mutate(Direction = case_when(gene_id %in% .x$geneID_upregulated   ~ "Upregulated",
+                                   gene_id %in% .x$geneID_downregulated ~ "Downregulated",
+                                   TRUE                                 ~ NA_character_)) %>%
+      filter(gene_id %in% unique(c(.x$geneID_upregulated, .x$geneID_downregulated))) %>% 
+      group_by(Genotype, Direction) %>%
+      summarise(median_log2_norm_counts = median(log2_norm_counts)) %>%
+      ungroup %>%
+      mutate(comparison = factor(.y, levels = names(DGE_results$DGE_genotype_WT))) 
+  )
+
+# Plot of median expression of the differentially expressed genes
+median_expression_plot <-
+ggplot(data    = median_expression_table,
+       mapping = aes(Genotype, fct_rev(comparison), fill = median_log2_norm_counts)) + 
+    geom_tile(color = "white") +
+    theme_publication() +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), 
+          panel.border     = element_blank(), 
+          axis.title.y     = element_blank(), 
+          plot.title       = element_text(face = "bold"),
+          legend.key.width = unit(0.35, "in"), 
+          axis.title.x     = element_blank()) +
+    facet_grid(Direction ~ .) +
+    labs(fill     = "Log2(norm. counts + 1)", 
+         title    = paste0("Expression of the DEGs\nbetween 4F strains and WT"), 
+         subtitle = "The results presented are the median normalized\ncounts of the biological replicates and genes") +
+    scale_x_discrete(expand = c(0,0)) +
+    scale_y_discrete(expand = c(0,0)) +
+    paletteer::scale_fill_paletteer_c("ggthemes::Orange-Blue Diverging", direction = -1)
+
+
+#################################
+# gprofiler2
+#################################
+
+gprofiler2_upregulated_plots <- 
+  map2(DGE_genotype_WT_results, names(DGE_genotype_WT_results), function(x, y){
+    
+    gprofiler2_clusters <- 
+      gprofiler2::gost(query                       = x$geneID_upregulated, 
+                       organism                    = "mmusculus", 
+                       significant                 = T, 
+                       user_threshold              = 0.05, 
+                       correction_method           = "bonferroni", 
+                       exclude_iea                 = T, 
+                       measure_underrepresentation = F, 
+                       highlight                   = T, 
+                       custom_bg                   = unique(na.omit(edb_gene_annotation$gene_id)))
+    
+    gprofiler2_plot_data <- 
+      gprofiler2_clusters$result %>% 
+      mutate(p_adjust = p.adjust(p_value, "bonferroni")) %>% 
+      filter(p_adjust < 0.05) %>% 
+      filter(term_size < 5000) %>% 
+      filter(!source %in% c("TF")) %>% 
+      arrange(dplyr::desc(p_adjust)) %>% 
+      tail(25) %>% 
+      mutate(term_name = factor(term_name, levels = unique(term_name)))
+    
+    gprofiler2_plot <- 
+      ggplot(data    = gprofiler2_plot_data, 
+             mapping = aes(x = -log10(p_adjust), y = term_name, fill = -log10(p_adjust), label = paste0(intersection_size,"/", term_size))) + 
+      geom_col(show.legend = F) + 
+      geom_text(mapping = aes(x = -log10(p_adjust) + .2), hjust = 0) +
+      facet_grid(source ~ ., scales = "free", space = "free") + 
+      theme_publication() + 
+      scale_fill_distiller(palette = "Reds", direction = 1) + 
+      theme(strip.text.y       = element_text(angle = 0, hjust = 0), 
+            panel.grid.minor.y = element_blank(), 
+            panel.grid.major.y = element_blank(), 
+            axis.title.y       = element_blank()) +
+      scale_x_continuous(expand = expansion(mult = c(0, .2))) +
+      labs(x        = "-Log10(adjusted p-value)", 
+           fill     = "-Log10(adjusted p-value)", 
+           title    = "g:Profiler functional enrichment", 
+           subtitle = paste0("Upregulated genes in ", 
+                             str_remove(y, ".vs.WT"), 
+                             "\n", 
+                             "Query size = ", 
+                             unique(gprofiler2_plot_data$query_size), 
+                             " genes"))
+    
+    return(gprofiler2_plot)
+  })  
+
+gprofiler2_downregulated_plots <- 
+  map2(DGE_genotype_WT_results, names(DGE_genotype_WT_results), function(x, y){
+    
+    gprofiler2_clusters <- 
+      gprofiler2::gost(query                       = x$geneID_downregulated, 
+                       organism                    = "mmusculus", 
+                       significant                 = T, 
+                       user_threshold              = 0.05, 
+                       correction_method           = "bonferroni", 
+                       exclude_iea                 = T, 
+                       measure_underrepresentation = F, 
+                       highlight                   = T, 
+                       custom_bg                   = unique(na.omit(edb_gene_annotation$gene_id)))
+    
+    gprofiler2_plot_data <- 
+      gprofiler2_clusters$result %>% 
+      mutate(p_adjust = p.adjust(p_value, "bonferroni")) %>% 
+      filter(p_adjust < 0.05) %>% 
+      filter(term_size < 5000) %>% 
+      filter(!source %in% c("TF")) %>% 
+      arrange(dplyr::desc(p_adjust)) %>% 
+      tail(25) %>% 
+      mutate(term_name = factor(term_name, levels = unique(term_name)))
+    
+    gprofiler2_plot <- 
+      ggplot(data    = gprofiler2_plot_data, 
+             mapping = aes(x = -log10(p_adjust), y = term_name, fill = -log10(p_adjust), label = paste0(intersection_size,"/", term_size))) + 
+      geom_col(show.legend = F) + 
+      geom_text(mapping = aes(x = -log10(p_adjust) + .2), hjust = 0) +
+      facet_grid(source ~ ., scales = "free", space = "free") + 
+      theme_publication() + 
+      scale_fill_distiller(palette = "Reds", direction = 1) + 
+      theme(strip.text.y       = element_text(angle = 0, hjust = 0), 
+            panel.grid.minor.y = element_blank(), 
+            panel.grid.major.y = element_blank(), 
+            axis.title.y       = element_blank()) +
+      scale_x_continuous(expand = expansion(mult = c(0, .2))) +
+      labs(x        = "-Log10(adjusted p-value)", 
+           fill     = "-Log10(adjusted p-value)", 
+           title    = "g:Profiler functional enrichment", 
+           subtitle = paste0("Downregulated genes in ", 
+                             str_remove(y, ".vs.WT"), 
+                             "\n", 
+                             "Query size = ", 
+                             unique(gprofiler2_plot_data$query_size), 
+                             " genes"))
+    
+    return(gprofiler2_plot)
+  })  
+
+
+#################################
+# enrichGO
+#################################
+
+# enrichGO upregulated 
+DGE_results_list <- 
+  DGE_genotype_WT_results %>% 
+  map(~ .x$geneID_upregulated)
+
+names(DGE_results_list) <- 
+  paste(str_remove(names(DGE_results_list), ".vs.WT"),
+        "upregulated")
+
+enrichGO_clusters_upregulated <- 
+  compareCluster(geneClusters  = DGE_results_list,
+                 fun           = "enrichGO", 
+                 OrgDb         = "org.Mm.eg.db",
+                 keyType       = 'ENSEMBL',
+                 ont           = "BP",
+                 pAdjustMethod = "BH",
+                 qvalueCutoff  = 0.05,
+                 pvalueCutoff  = 0.05,
+                 readable      = TRUE)
+  
+  
+# enrichGO downregulated 
+DGE_results_list <- 
+  DGE_genotype_WT_results %>% 
+  map(~ .x$geneID_downregulated)
+
+names(DGE_results_list) <- 
+  paste(str_remove(names(DGE_results_list), ".vs.WT"),
+        "downregulated")
+
+enrichGO_clusters_downregulated <- 
+  compareCluster(geneClusters  = DGE_results_list,
+                 fun           = "enrichGO", 
+                 OrgDb         = "org.Mm.eg.db",
+                 keyType       = 'ENSEMBL',
+                 ont           = "BP",
+                 pAdjustMethod = "BH",
+                 qvalueCutoff  = 0.05,
+                 pvalueCutoff  = 0.05,
+                 readable      = TRUE)
+
+# enrichGO dotplot
+enrichGO_clusters_dotplot <-
+  map(c(enrichGO_clusters_upregulated, enrichGO_clusters_downregulated) %>% set_names(c("upregulated", "downregulated")), function(x){
+    
+    clusterProfiler::dotplot(x, group = F, showCategory = 10) +
+      scale_y_discrete(labels = function(x) str_wrap(str_to_sentence(x), width = 50), drop = FALSE) +
+      labs(color = "Adj. p-value", size = "Gene ratio") +
+      theme(panel.grid.major = element_line(linetype = 2), 
+            axis.text.x      = element_text(hjust = 1, vjust = 1, angle = 45), 
+            axis.title.x     = element_blank()) +
+      scale_fill_distiller(palette = "Reds", direction = -1)
+    
+  })
+
+
+#################################
+# emapplot
+#################################
+enrichGO_clusters_emapplot <- 
+map2(c(enrichGO_clusters_upregulated, enrichGO_clusters_downregulated) %>% set_names(c("upregulated", "downregulated")), 
+     c("upregulated", "downregulated"), 
+    
+  ~ emapplot(enrichplot::pairwise_termsim(.x), showCategory = 5) + 
+    scale_fill_manual(values = levels(SummarizedExperiment_object$Color) %>%
+                               set_names(paste(levels(SummarizedExperiment_object$Genotype), .y)))
+  
+)
+
+
+#################################
+# enrichKEGG
+#################################
+ensembl_id_to_entrez_id <- 
+  function(gene_id_vector){
+    
+    mapIds(x         = org.Mm.eg.db, 
+           keys      = gene_id_vector,
+           column    = "ENTREZID",
+           keytype   = "ENSEMBL",
+           multiVals = "first") %>% 
+      na.omit
+    
+  }
+
+# enrichKEGG upregulated 
+DGE_results_list <- 
+  DGE_genotype_WT_results %>% 
+  map(~ ensembl_id_to_entrez_id(.x$geneID_upregulated)) 
+  
+names(DGE_results_list) <- 
+  paste(str_remove(names(DGE_results_list), ".vs.WT"),
+        "upregulated")
+  
+enrichKEGG_clusters_upregulated <- 
+compareCluster(geneClusters  = DGE_results_list,
+               fun           = "enrichKEGG", 
+               organism      = "mmu",
+               pAdjustMethod = "BH",
+               qvalueCutoff  = 0.05,
+               pvalueCutoff  = 0.05)
+  
+# enrichKEGG downregulated 
+DGE_results_list <- 
+  DGE_genotype_WT_results %>% 
+  map(~ ensembl_id_to_entrez_id(.x$geneID_downregulated)) 
+  
+names(DGE_results_list) <- 
+  paste(str_remove(names(DGE_results_list), ".vs.WT"),
+        "downregulated")
+  
+enrichKEGG_clusters_downregulated <- 
+compareCluster(geneClusters  = DGE_results_list,
+               fun           = "enrichKEGG", 
+               organism      = "mmu",
+               pAdjustMethod = "BH",
+               qvalueCutoff  = 0.05,
+               pvalueCutoff  = 0.05)
+
+# enrichKEGG dotplot
+enrichKEGG_clusters_dotplot <-
+  map(c(enrichKEGG_clusters_upregulated, enrichKEGG_clusters_downregulated) %>% set_names(c("upregulated", "downregulated")), function(x){
+    
+    x@compareClusterResult$Description <- str_remove(x@compareClusterResult$Description, " \\- Mus musculus \\(house mouse\\)")
+    
+    clusterProfiler::dotplot(x, group = F, showCategory = 10) +
+      scale_y_discrete(labels = function(x) str_wrap(str_to_sentence(x), width = 50), drop = FALSE) +
+      labs(color = "Adj. p-value", size = "Gene ratio") +
+      theme(panel.grid.major = element_line(linetype = 2), 
+            axis.text.x      = element_text(hjust = 1, vjust = 1, angle = 45), 
+            axis.title.x     = element_blank()) +
+      scale_fill_distiller(palette = "Reds", direction = -1)
+    
+  })
+
+
+#################################
+# Volcano plot
+#################################
+
+volcano_plots <- 
+map2(DGE_results$DGE_genotype_WT, names(DGE_results$DGE_genotype_WT), function(x, y){
+  
+  DGE_results_w_gene_anno <- 
+      x %>% 
+      as.data.frame() %>% 
+      rownames_to_column("gene_id") %>% 
+      left_join(as.data.frame(rowData(SummarizedExperiment_object)))
+  
+  geom_label_data <- 
+    rbind(
+      DGE_results_w_gene_anno %>% filter(abs(log2FoldChange) > 2 & padj < 0.05) %>% arrange(padj) %>% head(10),
+      DGE_results_w_gene_anno %>% filter(abs(log2FoldChange) > 2 & padj < 0.05) %>% arrange(dplyr::desc(abs(log2FoldChange))) %>% head(15)
+    ) %>% 
+    unique
+  
+  non_signficant_data <- 
+    DGE_results_w_gene_anno %>% 
+    filter(abs(log2FoldChange) <= 2 | padj >= 0.05)
+  
+  signficant_data <- 
+    DGE_results_w_gene_anno %>% 
+    filter(abs(log2FoldChange) > 2 & padj < 0.05)
+  
+  ggplot(data = DGE_results_w_gene_anno, aes(log2FoldChange, -log10(padj), color = -log10(padj))) + 
+    geom_hline(yintercept = 0) +
+    geom_vline(xintercept = 0) +
+    geom_hline(yintercept = -log10(0.05), color = "darkgray", lty = 2) +
+    geom_vline(xintercept = 2, color = "darkgray", lty = 2) +
+    geom_vline(xintercept = -2, color = "darkgray", lty = 2) +
+    geom_point(data = non_signficant_data, color = "gray") +
+    geom_point(data = signficant_data, size = 3) +
+    ggrepel::geom_label_repel(data = geom_label_data, mapping = aes(label = gene_name), color = "black", box.padding = unit(0.1, "in")) +
+    theme_publication() +
+    scale_x_continuous(limits = ggpmisc::symmetric_limits) +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), 
+          legend.direction = "vertical", 
+          legend.position  = "right", 
+          plot.title       = element_text(face = "bold")) +
+    labs(x        = "Log2 Fold change", 
+         y        = "-Log10 adj. P-value", 
+         color    = "-Log10 adj. P-value", 
+         title = paste0("Differential gene expression between ", str_remove(y, ".vs.WT"), " and WT")
+         ) +
+    paletteer::scale_color_paletteer_c("ggthemes::Orange-Blue Diverging", direction = -1)
+
+})
+
+```
+
+# Save plots
+```{r}
+
+svg(filename = "output/figures/04_DGE_genotype_WT/plot_DGE_number_pct.svg", width = 4.5, height = 9)
+plot_DGE_number / plot_DGE_pct
+dev.off()
+
+svg(filename = "output/figures/04_DGE_genotype_WT/shared_DGE_upregulated.svg", width = 5, height = 4)
+shared_DGE$Upregulated %>% UpSetR::upset(nsets = 4)
+dev.off()
+
+svg(filename = "output/figures/04_DGE_genotype_WT/shared_DGE_downregulated.svg", width = 5, height = 4)
+shared_DGE$Downregulated %>% UpSetR::upset(nsets = 4)
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/shared_DGE_upregulated.pdf", width = 3, height = 7)
+shared_DGE_heatmap$Upregulated
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/shared_DGE_downregulated.pdf", width = 4, height = 12)
+shared_DGE_heatmap$Downregulated
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/shared_DGE_upregulated_by_tissue.pdf", width = 12, height = 7)
+shared_DGE_by_tissue_heatmap$Upregulated
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/shared_DGE_downregulated_by_tissue.pdf", width = 12, height = 12)
+shared_DGE_by_tissue_heatmap$Downregulated
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_shared_DGE_downregulated_plot.pdf", width = 10, height = 8)
+gprofiler2_shared_DGE_downregulated_plot
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/median_expression_plot.pdf", width = 4.5, height = 7)
+median_expression_plot
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_upregulated_plots_1.pdf", width = 6, height = 2.5)
+gprofiler2_upregulated_plots$`4Fj.vs.WT`
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_upregulated_plots_2.pdf", width = 7, height = 5)
+gprofiler2_upregulated_plots$`4FsB.vs.WT`
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_upregulated_plots_3.pdf", width = 10, height = 6)
+gprofiler2_upregulated_plots$`4Fk.vs.WT`
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_upregulated_plots_4.pdf", width = 6, height = 4)
+gprofiler2_upregulated_plots$`4FsA.vs.WT`
+dev.off()
+
+
+pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_downregulated_plots_1.pdf", width = 10, height = 6)
+gprofiler2_downregulated_plots$`4Fj.vs.WT`
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_downregulated_plots_2.pdf", width = 11, height = 6)
+gprofiler2_downregulated_plots$`4FsB.vs.WT`
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_downregulated_plots_3.pdf", width = 14, height = 6)
+gprofiler2_downregulated_plots$`4Fk.vs.WT`
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_downregulated_plots_4.pdf", width = 11, height = 6)
+gprofiler2_downregulated_plots$`4FsA.vs.WT`
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/enrichGO_clusters.pdf", width = 16, height = 9)
+enrichGO_clusters_dotplot$upregulated + enrichGO_clusters_dotplot$downregulated
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/enrichKEGG_clusters.pdf", width = 14, height = 8)
+enrichKEGG_clusters_dotplot$upregulated + enrichKEGG_clusters_dotplot$downregulated
+dev.off()
+
+pdf(file = "output/figures/04_DGE_genotype_WT/volcano_plots.pdf", width = 14, height = 10)
+patchwork::wrap_plots(volcano_plots)
+dev.off()
+
+```
+
+# Session information
+```{r Session info, echo = FALSE, results = "markup"}
+
+devtools::session_info()
+
+```
+
+This document was processed on: `r Sys.Date()`.

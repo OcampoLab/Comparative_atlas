@@ -1,0 +1,664 @@
+---
+title:    "Ocampo Lab mouse reprogramming"
+subtitle: "Selected genes expression"
+author:   "Author: João Agostinho de Sousa"
+date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    theme: default
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+# Load libraries
+```{r}
+
+library(tidyverse)
+library(SummarizedExperiment)
+library(patchwork)
+library(ComplexHeatmap)
+
+```
+
+# Load objects
+```{r}
+
+# SummarizedExperiment object
+load(file = "output/database/SummarizedExperiment_object.RData")
+
+# Log2 normalized counts object
+load(file = "output/database/log2_norm_counts_object.RData")
+
+# DGE results
+load(file = "output/database/DGE_results.RData")
+
+# Selected genes
+load(file = "output/database/selected_genes.RData")
+
+```
+
+# Load functions
+```{r}
+
+# Theme publication
+source(file = "analysis/functions/theme_publication.R")
+
+```
+
+# Create data for the heatmaps
+```{r}
+
+# Heatmap plot data
+heatmap_plot_data <- 
+  map(selected_genes,
+  ~ log2_norm_counts_object$log2_norm_counts_long %>% 
+  filter(gene_name %in% .x) %>% 
+  mutate(gene_name = case_when(is.na(gene_name) ~ gene_id,
+                               TRUE             ~ gene_name)) %>% 
+  group_by(Genotype, Tissue, gene_id, gene_name) %>%
+  summarise(mean_log2_norm_counts = mean(log2_norm_counts, na.rm = T)) %>%
+  ungroup
+  )
+
+```
+
+# Heatmap colors
+```{r}
+
+heatmap_colors <- circlize::colorRamp2(seq(0, 15, 16/11), c(rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))))
+heatmap_colors_scaled <- circlize::colorRamp2(seq(-2, 2, 4/10), c(rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))))
+
+```
+
+# 1. Hepatocyte genes on the liver data
+```{r}
+
+########################################
+# Non-scaled
+########################################
+ht1 <- 
+  heatmap_plot_data$Hepatocyte_Hishida %>% 
+  filter(Tissue == "Liver") %>%
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors, 
+                          cluster_columns      = F, 
+                          column_title         = "Liver",
+                          column_title_gp      = gpar(fontface = "bold", cex = 1.25),
+                          row_title            = "Hepatocyte",
+                          row_title_rot        = 0,
+                          row_title_side       = "right",
+                          row_title_gp         = gpar(fontface = "bold"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+
+########################################
+# Scaled
+########################################
+ht1_scaled <- 
+  heatmap_plot_data$Hepatocyte_Hishida %>% 
+  filter(Tissue == "Liver") %>%
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  t %>% 
+  scale %>% 
+  t %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled, 
+                          cluster_columns      = F, 
+                          column_title         = "Liver",
+                          column_title_gp      = gpar(fontface = "bold", cex = 1.25),
+                          row_title            = "Hepatocyte",
+                          row_title_rot        = 0,
+                          row_title_side       = "right",
+                          row_title_gp         = gpar(fontface = "bold"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+
+```
+
+# 2. Hepatocyte genes on the liver data
+```{r}
+
+########################################
+# Non-scaled
+########################################
+ht2 <- 
+  rbind(heatmap_plot_data$Early_intermediate_reprogramming_Chondronasiou %>% mutate(gene_category = "Early"),
+        heatmap_plot_data$Early_and_advanced_intermediate_reprogramming_Chondronasiou %>% mutate(gene_category = "Early and advanced")) %>% 
+  rbind(heatmap_plot_data$Advanced_intermediate_reprogramming_Chondronasiou %>% mutate(gene_category = "Advanced")) %>% 
+  filter(Tissue == "Small intestine") %>%
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts, gene_category) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  mutate(gene_category = factor(gene_category, levels = c("Early", "Early and advanced", "Advanced"))) %>% 
+  arrange(gene_category) %>% 
+  dplyr::select(-gene_category) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors, 
+                          split                = c(rep(1, length(selected_genes$Early_intermediate_reprogramming_Chondronasiou)),
+                                                   rep(2, length(selected_genes$Early_and_advanced_intermediate_reprogramming_Chondronasiou)),
+                                                   rep(3, length(selected_genes$Advanced_intermediate_reprogramming_Chondronasiou))),
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Small intestine",
+                          column_title_gp      = gpar(fontface = "bold", cex = 1.25),
+                          row_title            = c("Early", "Early and advanced", "Advanced"),
+                          row_title_rot        = 0,
+                          gap                  = unit(.1, "in"),
+                          row_title_side       = "right",
+                          row_title_gp         = gpar(fontface = "bold"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+
+########################################
+# Scaled
+########################################
+ht2_scaled <- 
+  rbind(heatmap_plot_data$Early_intermediate_reprogramming_Chondronasiou %>% mutate(gene_category = "Early"),
+        heatmap_plot_data$Early_and_advanced_intermediate_reprogramming_Chondronasiou %>% mutate(gene_category = "Early and advanced")) %>% 
+  rbind(heatmap_plot_data$Advanced_intermediate_reprogramming_Chondronasiou %>% mutate(gene_category = "Advanced")) %>% 
+  filter(Tissue == "Small intestine") %>%
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts, gene_category) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  mutate(gene_category = factor(gene_category, levels = c("Early", "Early and advanced", "Advanced"))) %>% 
+  arrange(gene_category) %>% 
+  dplyr::select(-gene_category) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  t %>% 
+  scale %>% 
+  t %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled, 
+                          split                = c(rep(1, length(selected_genes$Early_intermediate_reprogramming_Chondronasiou)),
+                                                   rep(2, length(selected_genes$Early_and_advanced_intermediate_reprogramming_Chondronasiou)),
+                                                   rep(3, length(selected_genes$Advanced_intermediate_reprogramming_Chondronasiou))),
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Small intestine",
+                          column_title_gp      = gpar(fontface = "bold", cex = 1.25),
+                          row_title            = c("Early", "Early and advanced", "Advanced"),
+                          row_title_rot        = 0,
+                          gap                  = unit(.1, "in"),
+                          row_title_side       = "right",
+                          row_title_gp         = gpar(fontface = "bold"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+
+```
+
+# 3. Selected genes on data per tissue
+```{r}
+
+########################################
+# Non-Scaled
+########################################
+ht3 <- 
+map(list(
+  "Progenitor"            = heatmap_plot_data$Progenitor_Hishida,
+  "p53"                   = heatmap_plot_data$p53_Hishida,
+  "Cell_cycle"            = heatmap_plot_data$Cell_cycle_Hishida,
+  "Epigenetic_regulators" = heatmap_plot_data$Epigenetic_regulators_Hishida,
+  "Apoptosis"             = heatmap_plot_data$Apoptosis), function(x){
+    
+map(levels(SummarizedExperiment_object$Tissue),
+  
+  ~ x %>% 
+  filter(Tissue == .x) %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = .x,
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+  )
+})
+
+########################################
+# Scaled
+########################################
+ht3_scaled <- 
+map(list(
+  "Progenitor"            = heatmap_plot_data$Progenitor_Hishida,
+  "p53"                   = heatmap_plot_data$p53_Hishida,
+  "Cell_cycle"            = heatmap_plot_data$Cell_cycle_Hishida,
+  "Epigenetic_regulators" = heatmap_plot_data$Epigenetic_regulators_Hishida,
+  "Apoptosis"             = heatmap_plot_data$Apoptosis), function(x){
+    
+map(levels(SummarizedExperiment_object$Tissue),
+  
+  ~ x %>% 
+  filter(Tissue == .x) %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  t %>% 
+  scale %>% 
+  t %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = .x,
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+  )
+})
+
+```
+
+# 4. Selected genes on data with combined tissues
+```{r}
+
+# Heatmap plot data
+heatmap_plot_combined_data <- 
+  map(selected_genes,
+  ~ log2_norm_counts_object$log2_norm_counts_long %>% 
+  filter(gene_name %in% .x) %>% 
+  mutate(gene_name = case_when(is.na(gene_name) ~ gene_id,
+                               TRUE             ~ gene_name)) %>% 
+  group_by(Genotype, gene_id, gene_name) %>%
+  summarise(mean_log2_norm_counts = mean(log2_norm_counts, na.rm = T)) %>%
+  ungroup
+  )
+
+########################################
+# Non-Scaled
+########################################
+ht4 <- 
+map(list(
+  "Progenitor"            = heatmap_plot_combined_data$Progenitor_Hishida,
+  "p53"                   = heatmap_plot_combined_data$p53_Hishida,
+  "Cell_cycle"            = heatmap_plot_combined_data$Cell_cycle_Hishida,
+  "Epigenetic_regulators" = heatmap_plot_combined_data$Epigenetic_regulators_Hishida,
+  "Apoptosis"             = heatmap_plot_combined_data$Apoptosis), function(x){
+    
+  x %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+########################################
+# Scaled
+########################################
+ht4_scaled <- 
+map(list(
+  "Progenitor"            = heatmap_plot_combined_data$Progenitor_Hishida,
+  "p53"                   = heatmap_plot_combined_data$p53_Hishida,
+  "Cell_cycle"            = heatmap_plot_combined_data$Cell_cycle_Hishida,
+  "Epigenetic_regulators" = heatmap_plot_combined_data$Epigenetic_regulators_Hishida,
+  "Apoptosis"             = heatmap_plot_combined_data$Apoptosis), function(x){
+    
+  x %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>%
+  t %>% 
+  scale %>% 
+  t %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+```
+
+# Save heatmaps 1
+```{r}
+
+pdf(file = "output/figures/02_selected_genes_expression/ht1.pdf", width = 4, height = 7)
+draw(ht1, heatmap_legend_side = "bottom")
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht1_scaled.pdf", width = 4, height = 7)
+draw(ht1_scaled, heatmap_legend_side = "bottom")
+dev.off()
+
+```
+
+# Save heatmaps 2
+```{r}
+
+pdf(file = "output/figures/02_selected_genes_expression/ht2.pdf", width = 4.5, height = 7)
+draw(ht2, heatmap_legend_side = "bottom")
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht2_scaled.pdf", width = 4.5, height = 7)
+draw(ht2_scaled, heatmap_legend_side = "bottom")
+dev.off()
+
+```
+
+# Save heatmaps 3
+```{r}
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_Progenitor.pdf", width = 11, height = 4)
+(ht3$Progenitor[[1]] + 
+ ht3$Progenitor[[2]] + 
+ ht3$Progenitor[[3]] + 
+ ht3$Progenitor[[4]] + 
+ ht3$Progenitor[[5]] + 
+ ht3$Progenitor[[6]] + 
+ ht3$Progenitor[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Progenitor"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_p53.pdf", width = 11, height = 2.5)
+(ht3$p53[[1]] + 
+ ht3$p53[[2]] + 
+ ht3$p53[[3]] + 
+ ht3$p53[[4]] + 
+ ht3$p53[[5]] + 
+ ht3$p53[[6]] + 
+ ht3$p53[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("p53"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_Cell_cycle.pdf", width = 11, height = 4)
+(ht3$Cell_cycle[[1]] + 
+ ht3$Cell_cycle[[2]] + 
+ ht3$Cell_cycle[[3]] + 
+ ht3$Cell_cycle[[4]] + 
+ ht3$Cell_cycle[[5]] + 
+ ht3$Cell_cycle[[6]] + 
+ ht3$Cell_cycle[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Cell cycle"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_Epigenetic_regulators.pdf", width = 11, height = 8)
+(ht3$Epigenetic_regulators[[1]] + 
+ ht3$Epigenetic_regulators[[2]] + 
+ ht3$Epigenetic_regulators[[3]] + 
+ ht3$Epigenetic_regulators[[4]] + 
+ ht3$Epigenetic_regulators[[5]] + 
+ ht3$Epigenetic_regulators[[6]] + 
+ ht3$Epigenetic_regulators[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Epigenetic regulators"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_Apoptosis.pdf", width = 11, height = 11)
+(ht3$Apoptosis[[1]] + 
+ ht3$Apoptosis[[2]] + 
+ ht3$Apoptosis[[3]] + 
+ ht3$Apoptosis[[4]] + 
+ ht3$Apoptosis[[5]] + 
+ ht3$Apoptosis[[6]] + 
+ ht3$Apoptosis[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Apoptosis"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Save heatmaps 3 scaled
+```{r}
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_Progenitor_scaled.pdf", width = 11, height = 4)
+(ht3_scaled$Progenitor[[1]] + 
+ ht3_scaled$Progenitor[[2]] + 
+ ht3_scaled$Progenitor[[3]] + 
+ ht3_scaled$Progenitor[[4]] + 
+ ht3_scaled$Progenitor[[5]] + 
+ ht3_scaled$Progenitor[[6]] + 
+ ht3_scaled$Progenitor[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Progenitor"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_p53_scaled.pdf", width = 11, height = 2.5)
+(ht3_scaled$p53[[1]] + 
+ ht3_scaled$p53[[2]] + 
+ ht3_scaled$p53[[3]] + 
+ ht3_scaled$p53[[4]] + 
+ ht3_scaled$p53[[5]] + 
+ ht3_scaled$p53[[6]] + 
+ ht3_scaled$p53[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("p53"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_Cell_cycle_scaled.pdf", width = 11, height = 4)
+(ht3_scaled$Cell_cycle[[1]] + 
+ ht3_scaled$Cell_cycle[[2]] + 
+ ht3_scaled$Cell_cycle[[3]] + 
+ ht3_scaled$Cell_cycle[[4]] + 
+ ht3_scaled$Cell_cycle[[5]] + 
+ ht3_scaled$Cell_cycle[[6]] + 
+ ht3_scaled$Cell_cycle[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Cell cycle"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_Epigenetic_regulators_scaled.pdf", width = 11, height = 8)
+(ht3_scaled$Epigenetic_regulators[[1]] + 
+ ht3_scaled$Epigenetic_regulators[[2]] + 
+ ht3_scaled$Epigenetic_regulators[[3]] + 
+ ht3_scaled$Epigenetic_regulators[[4]] + 
+ ht3_scaled$Epigenetic_regulators[[5]] + 
+ ht3_scaled$Epigenetic_regulators[[6]] + 
+ ht3_scaled$Epigenetic_regulators[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Epigenetic regulators"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht3_Apoptosis_scaled.pdf", width = 11, height = 11)
+(ht3_scaled$Apoptosis[[1]] + 
+ ht3_scaled$Apoptosis[[2]] + 
+ ht3_scaled$Apoptosis[[3]] + 
+ ht3_scaled$Apoptosis[[4]] + 
+ ht3_scaled$Apoptosis[[5]] + 
+ ht3_scaled$Apoptosis[[6]] + 
+ ht3_scaled$Apoptosis[[7]]) %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Apoptosis"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Save heatmaps 4
+```{r}
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_Progenitor.pdf", width = 2.75, height = 4)
+ht4$Progenitor %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Progenitor"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_p53.pdf", width = 2.75, height = 2.5)
+ht4$p53 %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("p53"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_Cell_cycle.pdf", width = 2.75, height = 4)
+ht4$Cell_cycle %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Cell cycle"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_Epigenetic_regulators.pdf", width = 2.75, height = 8)
+ht4$Epigenetic_regulators %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Epigenetic regulators"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_Apoptosis.pdf", width = 2.75, height = 11)
+ht4$Apoptosis %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Apoptosis"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Save heatmaps 4 scaled
+```{r}
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_Progenitor_scaled.pdf", width = 2.75, height = 4)
+ht4_scaled$Progenitor %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Progenitor"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_p53_scaled.pdf", width = 2.75, height = 2.5)
+ht4_scaled$p53 %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("p53"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_Cell_cycle_scaled.pdf", width = 2.75, height = 4)
+ht4_scaled$Cell_cycle %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Cell cycle"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_Epigenetic_regulators_scaled.pdf", width = 2.75, height = 8)
+ht4_scaled$Epigenetic_regulators %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Epigenetic regulators"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht4_Apoptosis_scaled.pdf", width = 2.75, height = 11)
+ht4_scaled$Apoptosis %>% 
+draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Apoptosis"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Session information
+```{r Session info, echo = FALSE, results = "markup"}
+
+devtools::session_info()
+
+```
+
+This document was processed on: `r Sys.Date()`.

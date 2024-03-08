@@ -69,9 +69,9 @@ map(list("4Fj.vs.WT"  = c("4Fj",  "WT"),
   deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% sample_subset]
   deseq2_object$Genotype <- factor(deseq2_object$Genotype, levels = x[2:1])
   
-  deseq2 <- DESeq(object = deseq2_object, parallel = T, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
+  deseq2 <- DESeq(object = deseq2_object, parallel = F, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
     
-  deseq2_results <- DESeq2::results(deseq2, alpha = 0.05, parallel = T, BPPARAM = BiocParallel::MulticoreParam(20))
+  deseq2_results <- DESeq2::results(deseq2, alpha = 0.05, parallel = F, BPPARAM = BiocParallel::MulticoreParam(20))
   
   return(deseq2_results)
 
@@ -140,9 +140,9 @@ map(list("4Fj.vs.WT_Kidney"          = c("4Fj",  "WT", "Kidney"),
   deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% sample_subset]
   deseq2_object$Genotype <- factor(deseq2_object$Genotype, levels = x[2:1])
   
-  deseq2 <- DESeq(object = deseq2_object, parallel = T, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
+  deseq2 <- DESeq(object = deseq2_object, parallel = F, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
     
-  deseq2_results <- DESeq2::results(deseq2, alpha = 0.05, parallel = T, BPPARAM = BiocParallel::MulticoreParam(20))
+  deseq2_results <- DESeq2::results(deseq2, alpha = 0.05, parallel = F, BPPARAM = BiocParallel::MulticoreParam(20))
   
   return(deseq2_results)
 
@@ -226,9 +226,9 @@ map(list(
   deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% sample_subset]
   deseq2_object$Genotype <- factor(deseq2_object$Genotype, levels = x[2:1])
   
-  deseq2 <- DESeq(object = deseq2_object, parallel = T, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
+  deseq2 <- DESeq(object = deseq2_object, parallel = F, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
     
-  deseq2_results <- DESeq2::results(deseq2, alpha = 0.05, parallel = T, BPPARAM = BiocParallel::MulticoreParam(20))
+  deseq2_results <- DESeq2::results(deseq2, alpha = 0.05, parallel = F, BPPARAM = BiocParallel::MulticoreParam(20))
   
   return(deseq2_results)
 
@@ -310,9 +310,9 @@ map(list(
   deseq2_object$Tissue <- deseq2_object$Tissue %>% str_replace_na("Other tissues")
   deseq2_object$Tissue <- factor(deseq2_object$Tissue, levels = c("Other tissues", x[2]))
   
-  deseq2 <- DESeq(object = deseq2_object, parallel = T, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
+  deseq2 <- DESeq(object = deseq2_object, parallel = F, modelMatrixType = "standard", BPPARAM = BiocParallel::MulticoreParam(20))
     
-  deseq2_results <- DESeq2::results(deseq2, alpha = 0.05, parallel = T, BPPARAM = BiocParallel::MulticoreParam(20))
+  deseq2_results <- DESeq2::results(deseq2, alpha = 0.05, parallel = F, BPPARAM = BiocParallel::MulticoreParam(20))
   
   return(deseq2_results)
 

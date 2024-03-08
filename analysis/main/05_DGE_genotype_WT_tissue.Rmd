@@ -136,7 +136,7 @@ plot_DGE_number <-
           legend.title       = element_blank(),
           strip.text.y       = element_text(angle = 0, hjust = 0)) +
     scale_y_continuous(expand = c(0,0), limits = c(0, 4000)) +
-    labs(title = "Number of differentially expressed genes between genotype and wild type (WT)")
+    labs(title = "Number of differentially expressed genes between 4F strains and wild type (WT)")
 
 # Dataframe with the percentage of differentially expressed genes for each condition
 DGE_pct_df <-
@@ -175,19 +175,16 @@ plot_DGE_pct <-
         strip.placement  = "ouside", 
         plot.title       = element_text(face = "bold"),
         legend.title     = element_blank(),
-        strip.text.y     = element_text(angle = 0, hjust = 0)) +
+        strip.text.y     = element_text(angle = 0, hjust = 0), 
+        axis.title.x     = element_blank()) +
   scale_y_continuous(expand = c(0,0)) +
   scale_x_discrete(expand = c(0,0)) +
-  labs(title = "Percentage of differentially expressed genes between genotype and wild type (WT)")
+  labs(title = "Percentage of differentially expressed genes between 4F strains and wild type (WT)")
 
 ```
 
-# Genotype vs. WT comparison by tissue
-```{r}
-
-#################################
 # Shared DEGs
-#################################
+```{r}
 
 # Number of differentially expressed genes shared between tissues
 shared_DGE <- 
@@ -196,6 +193,10 @@ shared_DGE <-
     spread(Condition, -gene_id) %>% 
     mutate_at(.vars = vars(-c("gene_id")), .funs = ~ as.numeric(as.factor(.x)) %>% replace_na(replace = 0))
 
+```
+
+# Genotype vs. WT comparison by tissue
+```{r}
 
 #################################
 # Median expression of DEGs
@@ -568,49 +569,9 @@ map2(DGE_results$DGE_genotype_WT_tissue, names(DGE_results$DGE_genotype_WT_tissu
 # Save plots
 ```{r}
 
-svg(filename = "output/figures/03_DGE_genotype_WT_tissue/plot_DGE_number_pct.svg", width = 15, height = 10)
+svg(filename = "output/figures/05_DGE_genotype_WT_tissue/plot_DGE_number_pct.svg", width = 15, height = 10)
 plot_DGE_number / plot_DGE_pct
 dev.off()
-
-shared_DGE %>% dplyr::select(gene_id, contains("4Fj")) %>% UpSetR::upset(nsets = 7)
-shared_DGE %>% dplyr::select(gene_id, contains("4FsB")) %>% UpSetR::upset(nsets = 7) 
-shared_DGE %>% dplyr::select(gene_id, contains("4Fk")) %>% UpSetR::upset(nsets = 7) 
-shared_DGE %>% dplyr::select(gene_id, contains("4FsA")) %>% UpSetR::upset(nsets = 7) 
-
-median_expression_plot
-enrichGO_clusters_dotplot
-enrichKEGG_clusters_dotplot
-volcano_plots
-
-gprofiler2_upregulated_plots$`4Fj.vs.WT_Kidney`
-gprofiler2_downregulated_plots$`4Fj.vs.WT_Kidney`
-
-
-pdf(file = "output/figures/03_DGE_analysis/median_expression_plot.pdf", width = 8, height = 7)
-median_expression_plot
-dev.off()
-
-pdf(file = "output/figures/03_DGE_analysis/enrichGO_clusters.pdf", width = 13, height = 7)
-enrichGO_clusters_dotplot$enrichGO_clusters_upregulated + enrichGO_clusters_dotplot$enrichGO_clusters_downregulated
-dev.off()
-
-pdf(file = "output/figures/03_DGE_analysis/volcano_plots.pdf", width = 21, height = 10)
-patchwork::wrap_plots(volcano_plots)
-dev.off()
-
-pdf(file = "output/figures/03_DGE_analysis/gprofiler2_plot1.pdf", width = 15, height = 8)
-(gprofiler2_upregulated_plots$`4F D1 +HS 4h vs. Control D1 +HS 4h` / (ggplot() + theme_void())) + plot_layout(heights = c(0.1, 1)) |
-(gprofiler2_downregulated_plots$`4F D1 +HS 4h vs. Control D1 +HS 4h`)
-dev.off()
-
-pdf(file = "output/figures/03_DGE_analysis/gprofiler2_plot2.pdf", width = 9, height = 5)
-gprofiler2_downregulated_plots$`4F D1 +HS 48h vs. Control D1 +HS 48h`
-dev.off()
-
-pdf(file = "output/figures/03_DGE_analysis/gprofiler2_plot3.pdf", width = 7, height = 2.5)
-gprofiler2_upregulated_plots$`4F D10 -HS 48h vs. Control D10 -HS 48h`
-dev.off()
-
 
 ```
 

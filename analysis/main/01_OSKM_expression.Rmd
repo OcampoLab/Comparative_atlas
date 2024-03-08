@@ -73,7 +73,7 @@ barplot_OSKM_expression_by_sample <-
         legend.direction   = "horizontal", 
         strip.text.y       = element_text(angle = 0, hjust = 0),
         axis.text.x        = element_text(hjust = 1, vjust = 1, angle = 45)) +
-  labs(y = "Log2(norm. counts + 1)", fill = "Genotype") +
+  labs(y = "Log2(norm. counts + 1)", fill = "Mouse strain") +
   scale_y_continuous(expand = c(0,0), limits = c(0, 13.5))
 
 # Heatmap with the OSKM gene expression per Tissue and Genotype (by sample)
@@ -102,25 +102,105 @@ heatmap_OSKM_expression_by_sample <-
   scale_x_discrete(expand = c(0,0))
 
 # Barplot with the OSKM gene expression per Tissue and Genotype
-barplot_OSKM_expression <- 
-  log2_norm_counts_object$log2_norm_counts_long_summarised %>% 
+OSKM_log2_norm_counts_long <- 
+  log2_norm_counts_object$log2_norm_counts_long %>% 
   filter(gene_id %in% OSKM_gene_ids) %>%
-  mutate(gene_name   = factor(gene_name,   levels = c("Pou5f1", "Sox2", "Myc", "Klf4"))) %>% 
-  ggplot(aes(Genotype, mean_log2_norm_counts, fill = Color)) + 
+  mutate(gene_name = factor(gene_name, levels = c("Pou5f1", "Sox2", "Myc", "Klf4")))
+
+OSKM_log2_norm_counts_summarized <- 
+  OSKM_log2_norm_counts_long %>% 
+  group_by(gene_id, seqnames, start, end, width, strand, gene_name, gene_biotype, Tissue, Genotype, Color) %>% 
+  summarise(median_log2_norm_counts = median(log2_norm_counts),
+         mean_log2_norm_counts   = mean(log2_norm_counts),
+         sd_log2_norm_counts     = sd(log2_norm_counts)) %>% 
+  ungroup
+
+barplot_OSKM_expression <- 
+  ggplot(data = OSKM_log2_norm_counts_long, mapping = aes(x = Genotype, y = log2_norm_counts, fill = Color)) + 
   geom_hline(yintercept = 0) +
-  geom_col() +
-  geom_errorbar(mapping = aes(ymin = mean_log2_norm_counts-sd_log2_norm_counts,
-                              ymax = mean_log2_norm_counts+sd_log2_norm_counts), width = 0.2) +
+  geom_col(data = OSKM_log2_norm_counts_summarized, mapping = aes(x = Genotype, y = mean_log2_norm_counts, fill = Color)) +
+  geom_jitter(height = 0, width = 0.2, show.legend = F) +
+  geom_errorbar(data    = OSKM_log2_norm_counts_summarized,
+                mapping =
+                  aes(x    = Genotype,
+                      y    = mean_log2_norm_counts,
+                      ymin = mean_log2_norm_counts-sd_log2_norm_counts,
+                      ymax = mean_log2_norm_counts+sd_log2_norm_counts), 
+                width = 0.2,
+                show.legend = F) +
   facet_grid(Tissue ~ gene_name) + 
-  scale_fill_identity(guide = "legend", labels = levels(log2_norm_counts_object$log2_norm_counts_long_summarised$Genotype)) + 
+  scale_fill_identity(guide = "legend", labels = levels(OSKM_log2_norm_counts_long$Genotype)) + 
   theme_publication() +
   theme(panel.grid.major.x = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.border = element_blank(), 
-        strip.placement = "ouside", 
-        strip.text.y = element_text(angle = 0, hjust = 0)) +
-  labs(y = "Log2(norm. counts + 1)", fill = "Genotype") +
+        panel.grid.minor   = element_blank(),
+        panel.border       = element_blank(), 
+        strip.placement    = "ouside", 
+        strip.text.y       = element_text(angle = 0, hjust = 0, size = 13),
+        strip.text.x       = element_text(size = 13),
+        axis.title.x       = element_blank()) +
+  labs(y = "Log2(norm. counts + 1)", fill = "Mouse strain")
+  
+barplot_OSKM_expression_by_genotype <-
+ggplot(data = OSKM_log2_norm_counts_long, mapping = aes(x = Tissue, y = log2_norm_counts, fill = Color)) + 
+  geom_hline(yintercept = 0) +
+  geom_col(data = OSKM_log2_norm_counts_summarized, mapping = aes(x = Tissue, y = mean_log2_norm_counts, fill = Color)) +
+  geom_jitter(height = 0, width = 0.2, show.legend = F) +
+  geom_errorbar(data    = OSKM_log2_norm_counts_summarized,
+                mapping =
+                  aes(x    = Tissue,
+                      y    = mean_log2_norm_counts,
+                      ymin = mean_log2_norm_counts-sd_log2_norm_counts,
+                      ymax = mean_log2_norm_counts+sd_log2_norm_counts), 
+                width = 0.2,
+                show.legend = F) +
+  facet_grid(gene_name ~ Genotype) + 
+  scale_fill_identity(guide = "legend", labels = levels(OSKM_log2_norm_counts_long$Genotype)) + 
+  theme_publication() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor   = element_blank(),
+        panel.border       = element_blank(), 
+        strip.placement    = "ouside", 
+        strip.text.y       = element_text(angle = 0, hjust = 0, size = 13),
+        strip.text.x       = element_text(size = 13),
+        axis.text.x        = element_text(angle = 45, hjust = 1, vjust = 1), 
+        axis.ticks.x       = element_blank(),
+        axis.title.x       = element_blank()) +
+  labs(y = "Log2(norm. counts + 1)", fill = "Mouse strain") +
   scale_y_continuous(expand = c(0,0))
+
+# Barplot with the OSKM gene expression (All tissues combined)
+OSKM_log2_norm_counts_summarized_combined <- 
+  OSKM_log2_norm_counts_long %>% 
+  group_by(gene_id, seqnames, start, end, width, strand, gene_name, gene_biotype, Genotype, Color) %>% 
+  summarise(median_log2_norm_counts = median(log2_norm_counts),
+         mean_log2_norm_counts   = mean(log2_norm_counts),
+         sd_log2_norm_counts     = sd(log2_norm_counts)) %>% 
+  ungroup
+
+barplot_OSKM_expression_combined <- 
+  ggplot(data = OSKM_log2_norm_counts_long, mapping = aes(x = Genotype, y = log2_norm_counts, fill = Color)) + 
+  geom_hline(yintercept = 0) +
+  geom_col(data = OSKM_log2_norm_counts_summarized_combined, mapping = aes(x = Genotype, y = mean_log2_norm_counts, fill = Color)) +
+  geom_jitter(height = 0, width = 0.2, show.legend = F, alpha = 1/3) +
+  geom_errorbar(data    = OSKM_log2_norm_counts_summarized_combined,
+                mapping =
+                  aes(x    = Genotype,
+                      y    = mean_log2_norm_counts,
+                      ymin = mean_log2_norm_counts-sd_log2_norm_counts,
+                      ymax = mean_log2_norm_counts+sd_log2_norm_counts), 
+                width = 0.2,
+                show.legend = F) +
+  facet_grid(. ~ gene_name) + 
+  scale_fill_identity(guide = "legend", labels = levels(OSKM_log2_norm_counts_long$Genotype)) + 
+  theme_publication() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor   = element_blank(),
+        panel.border       = element_blank(), 
+        strip.placement    = "ouside", 
+        strip.text.y       = element_text(angle = 0, hjust = 0, size = 13),
+        strip.text.x       = element_text(size = 13),
+        axis.title.x       = element_blank()) +
+  labs(y = "Log2(norm. counts + 1)", fill = "Mouse strain")
 
 # Heatmap with the OSKM gene expression per Tissue and Genotype
 heatmap_OSKM_expression <- 
@@ -170,7 +250,7 @@ DGE_genotype_WT_tissue_OSKM <-
 
 # Plot with the DGE results for the OSKM genes by genotype and tissue
 DGE_OSKM_plot <- 
-  DGE_genotype_WT_tissue_OSKM %>% 
+    DGE_genotype_WT_tissue_OSKM %>% 
     mutate(Genotype = factor(Genotype, levels = levels(SummarizedExperiment_object$Genotype)),
            Tissue   = factor(Tissue,   levels = levels(SummarizedExperiment_object$Tissue))) %>%
     mutate(padj = -log10(padj)) %>% 
@@ -182,40 +262,167 @@ DGE_OSKM_plot <-
     theme_publication() +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), 
-          panel.border     = element_blank(), 
           axis.title.y     = element_blank(),
           plot.title       = element_text(face = "bold"),
-          legend.key.width = unit(0.35, "in")) + 
+          legend.key.width = unit(0.35, "in"), 
+          axis.ticks.y     = element_blank(),
+          strip.text.x     = element_text(size = 13), 
+          axis.title.x     = element_blank()) + 
     scale_size_area(max_size = 15) +
     scale_fill_distiller(palette = "Reds", direction = 1) +
+    scale_x_discrete(expand = c(0,0)) +
+    scale_y_discrete(expand = c(0,0)) +
     labs(fill     = "Log2(Fold change)", 
          size     = "-Log10(Adj. P-value)",
-         title    = "Differential expression results between genotypes and wild type (WT)", 
-         subtitle = "Positive Log2 Fold change means the WT samples have lower expression") 
+         title    = "Differential expression results between 4F strains and wild type (WT)", 
+         subtitle = "Positive Log2 Fold change means the WT samples have lower expression")
+
+# Heatmap with adjusted p-value symbols
+DGE_OSKM_plot_w_stars <-
+  DGE_genotype_WT_tissue_OSKM %>% 
+    mutate(Genotype = factor(Genotype, levels = levels(SummarizedExperiment_object$Genotype)),
+           Tissue   = factor(Tissue,   levels = levels(SummarizedExperiment_object$Tissue))) %>%
+    mutate(gene_name   = factor(gene_name,   levels = c("Pou5f1", "Sox2", "Myc", "Klf4"))) %>% 
+    mutate(padj_symbol = case_when(padj <= 0.001 ~ "***",
+                                   padj <= 0.01  ~ "**",
+                                   padj <= 0.05  ~ "*",
+                                   TRUE ~ NA_character_)) %>% 
+    ggplot(aes(Genotype, fct_rev(Tissue), fill = log2FoldChange, label = padj_symbol)) + 
+    geom_tile(color = "black") + 
+    geom_text(size = 5) +
+    facet_grid( ~ gene_name) +
+    theme_publication() +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), 
+          axis.title.y     = element_blank(),
+          plot.title       = element_text(face = "bold"),
+          legend.key.width = unit(0.35, "in"), 
+          axis.ticks.y     = element_blank(),
+          strip.text.x     = element_text(size = 13), 
+          axis.title.x     = element_blank()) +
+  scale_fill_distiller(palette = "Reds", direction = 1) +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_y_discrete(expand = c(0,0)) +
+  labs(fill     = "Log2(Fold change)", 
+       size     = "-Log10(Adj. P-value)",
+       title    = "Differential expression results between 4F strains and wild type (WT)", 
+       subtitle = "Positive Log2 Fold change means the WT samples have lower expression")
+
+# Facet by Genotype
+DGE_OSKM_plot_w_stars_by_Genotype <-
+  DGE_genotype_WT_tissue_OSKM %>% 
+    mutate(Genotype = factor(Genotype, levels = levels(SummarizedExperiment_object$Genotype)),
+           Tissue   = factor(Tissue,   levels = levels(SummarizedExperiment_object$Tissue))) %>%
+    mutate(gene_name   = factor(gene_name,   levels = c("Pou5f1", "Sox2", "Myc", "Klf4"))) %>% 
+    mutate(padj_symbol = case_when(padj <= 0.001 ~ "***",
+                                   padj <= 0.01  ~ "**",
+                                   padj <= 0.05  ~ "*",
+                                   TRUE ~ NA_character_)) %>% 
+    ggplot(aes(Tissue, fct_rev(gene_name), fill = log2FoldChange, label = padj_symbol)) + 
+    geom_tile(color = "black") + 
+    geom_text(size = 5) +
+    facet_grid( ~ Genotype) +
+    theme_publication() +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), 
+          axis.title.y     = element_blank(),
+          plot.title       = element_text(face = "bold"),
+          legend.key.width = unit(0.35, "in"), 
+          axis.ticks.y     = element_blank(),
+          strip.text.x     = element_text(size = 13), 
+          axis.title.x     = element_blank(), 
+          axis.ticks.x     = element_blank(), 
+          axis.text.x      = element_text(hjust = 1, vjust = 1, angle = 45)) +
+  scale_fill_distiller(palette = "Reds", direction = 1) +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_y_discrete(expand = c(0,0)) +
+  labs(fill     = "Log2(Fold change)", 
+       size     = "-Log10(Adj. P-value)",
+       title    = "Differential expression results between 4F strains and wild type (WT)", 
+       subtitle = "Positive Log2 Fold change means the WT samples have lower expression")
+
+# Facet by Tissue
+DGE_OSKM_plot_w_stars_by_Tissue <- 
+  DGE_genotype_WT_tissue_OSKM %>% 
+    mutate(Genotype = factor(Genotype, levels = levels(SummarizedExperiment_object$Genotype)),
+           Tissue   = factor(Tissue,   levels = levels(SummarizedExperiment_object$Tissue))) %>%
+    mutate(gene_name   = factor(gene_name,   levels = c("Pou5f1", "Sox2", "Myc", "Klf4"))) %>% 
+    mutate(padj_symbol = case_when(padj <= 0.001 ~ "***",
+                                   padj <= 0.01  ~ "**",
+                                   padj <= 0.05  ~ "*",
+                                   TRUE ~ NA_character_)) %>% 
+    ggplot(aes(Genotype, fct_rev(gene_name), fill = log2FoldChange, label = padj_symbol)) + 
+    geom_tile(color = "black") + 
+    geom_text(size = 5) +
+    facet_grid( ~ Tissue) +
+    theme_publication() +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), 
+          axis.title.y     = element_blank(),
+          plot.title       = element_text(face = "bold"),
+          legend.key.width = unit(0.35, "in"), 
+          axis.ticks.y     = element_blank(),
+          strip.text.x     = element_text(size = 13), 
+          axis.title.x     = element_blank()) +
+  scale_fill_distiller(palette = "Reds", direction = 1) +
+  scale_x_discrete(expand = c(0,0)) +
+  scale_y_discrete(expand = c(0,0)) +
+  labs(fill     = "Log2(Fold change)", 
+       size     = "-Log10(Adj. P-value)",
+       title    = "Differential expression results between 4F strains and wild type (WT)", 
+       subtitle = "Positive Log2 Fold change means the WT samples have lower expression")
 
 ```
 
 # Save plots
 ```{r}
 
-svg(filename = "output/figures/01_OSKM_expression/barplot_OSKM_expression_by_sample.svg", width = 15, height = 25)
-barplot_OSKM_expression_by_sample
-dev.off()
-
-pdf(file = "output/figures/01_OSKM_expression/heatmap_OSKM_expression_by_sample.pdf", width = 13, height = 8)
-heatmap_OSKM_expression_by_sample
-dev.off()
-
 svg(filename = "output/figures/01_OSKM_expression/barplot_OSKM_expression.svg", width = 10, height = 13)
 barplot_OSKM_expression
 dev.off()
 
-pdf(file = "output/figures/01_OSKM_expression/heatmap_OSKM_expression.pdf", width = 10, height = 5)
-heatmap_OSKM_expression
+comparisons <- list(c("WT", "4Fj"), c("WT", "4FsB"), c("WT", "4Fk"), c("WT", "4FsA"))
+svg(filename = "output/figures/01_OSKM_expression/barplot_OSKM_expression_w_signif.svg", width = 10, height = 13)
+barplot_OSKM_expression +
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1), add = c(0, 0))) +
+  ggpubr::stat_compare_means(data = OSKM_log2_norm_counts_long, comparisons = comparisons, method = "t.test", label = "p.signif", hide.ns = T, show.legend = F, vjust = 0.5, size = 5, p.adjust.method = "bonferroni")
+dev.off()
+
+svg(filename = "output/figures/01_OSKM_expression/barplot_OSKM_expression_w_anova.svg", width = 10, height = 13)
+barplot_OSKM_expression + 
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1), add = c(0, 0))) + 
+  stat_anova_test(method       = "one_way",
+                  label        = "{p.signif}, p = {p.format}", 
+                  significance = list(cutpoints = c(0, 0.001, 0.01, 0.05, Inf), symbols = c("***", "**", "*", "ns")),
+                  show.legend  = F, 
+                  vjust        = 0.5, 
+                  size         = 4)
+dev.off()
+
+comparisons <- list(c("WT", "4Fj"), c("WT", "4FsB"), c("WT", "4Fk"), c("WT", "4FsA"))
+svg(filename = "output/figures/01_OSKM_expression/barplot_OSKM_expression_w_signif_combined.svg", width = 10, height = 4)
+barplot_OSKM_expression_combined +
+  ggpubr::stat_compare_means(data = OSKM_log2_norm_counts_long, comparisons = comparisons, method = "t.test", label = "p.signif", hide.ns = T, show.legend = F, vjust = 0.5, size = 6, p.adjust.method = "bonferroni")
+dev.off()
+
+svg(filename = "output/figures/01_OSKM_expression/barplot_OSKM_expression_by_genotype.svg", width = 11, height = 9)
+barplot_OSKM_expression_by_genotype
 dev.off()
 
 pdf(file = "output/figures/01_OSKM_expression/DGE_OSKM_plot.pdf", width = 10, height = 5)
 DGE_OSKM_plot
+dev.off()
+
+pdf(file = "output/figures/01_OSKM_expression/DGE_OSKM_plot_w_stars.pdf", width = 9, height = 4.5)
+DGE_OSKM_plot_w_stars
+dev.off()
+
+pdf(file = "output/figures/01_OSKM_expression/DGE_OSKM_plot_w_stars_by_Genotype.pdf", width = 10, height = 4.1)
+DGE_OSKM_plot_w_stars_by_Genotype
+dev.off()
+
+pdf(file = "output/figures/01_OSKM_expression/DGE_OSKM_plot_w_stars_by_Tissue.pdf", width = 12, height = 3.5)
+DGE_OSKM_plot_w_stars_by_Tissue
 dev.off()
 
 ```

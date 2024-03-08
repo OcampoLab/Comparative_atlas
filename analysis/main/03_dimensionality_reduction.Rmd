@@ -283,19 +283,19 @@ UMAP_plots <-
 # Save plots
 ```{r}
 
-pdf(file = "output/figures/02_dimensionality_reduction/PCA_plot_combined.pdf", width = 10, height = 18)
+pdf(file = "output/figures/03_dimensionality_reduction/PCA_plot_combined.pdf", width = 10, height = 18)
 PCA_plot_combined$PC1.vs.PC2 / PCA_plot_combined$PC1.vs.PC3 / PCA_plot_combined$PC2.vs.PC3
 dev.off()
 
-pdf(file = "output/figures/02_dimensionality_reduction/PCA_plot_tissue.pdf", width = 15, height = 8)
+pdf(file = "output/figures/03_dimensionality_reduction/PCA_plot_tissue.pdf", width = 15, height = 8)
 PCA_plot_tissue
 dev.off()
 
-pdf(file = "output/figures/02_dimensionality_reduction/tSNE_plots.pdf", width = 12, height = 7)
+pdf(file = "output/figures/03_dimensionality_reduction/tSNE_plots.pdf", width = 12, height = 7)
 tSNE_plots
 dev.off()
 
-pdf(file = "output/figures/02_dimensionality_reduction/UMAP_plots.pdf", width = 12, height = 7)
+pdf(file = "output/figures/03_dimensionality_reduction/UMAP_plots.pdf", width = 12, height = 7)
 UMAP_plots
 dev.off()
 

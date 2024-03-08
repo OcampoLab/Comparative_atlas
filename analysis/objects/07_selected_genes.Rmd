@@ -1,0 +1,129 @@
+---
+title:    "Ocampo Lab mouse reprogramming"
+subtitle: "List of selected genes"
+author:   "Author: João Agostinho de Sousa"
+date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    theme: default
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+# Load libraries
+```{r}
+
+library(tidyverse)
+
+```
+
+# Load objects
+```{r}
+
+# SummarizedExperiment
+load(file = "output/database/SummarizedExperiment_object.RData")
+
+```
+
+# List of selected genes
+```{r}
+
+# In vivo partial cellular reprogramming enhances liver plasticity and regeneration
+# Hishida et al.
+# Cell reports 2022
+# https://www.sciencedirect.com/science/article/pii/S2211124722004910?via%3Dihub 
+
+Hepatocyte_Hishida <- 
+c("Alb", "Hnf1a", "Hnf4a", "Onecut1", "Cyp1a2", "Cyp2a5", "Cyp3a11", "Acsl1", "Apoc1", "Apoc2", "Apoa5", "Hpx", "Arg1", "Cps1", "Pck1", "Slc25a47", "Otc", "Cbs", "Asl", "Cpox", "Cs", "Khk", "Gsta3", "Glul", "Aldh1a1", "Aldh3a2", "Aqp9", "Gstm1", "Gstm2", "Gstm6", "Afp")
+# Hnf6 = Onecut1
+
+Progenitor_Hishida <-
+c("Krt8", "Sox9", "Krt7", "Epcam", "Krt19", "Jag1", "Hes1", "Lgr5", "Axin2", "Prom1", "Cd24a", "Tcf7l2", "Ddr1", "Igfbp3")
+
+p53_Hishida <-
+c("Cdkn1a", "Thbs1", "Mdm2", "Bid", "Ccng1")
+
+Cell_cycle_Hishida <-
+c("Mki67", "Mcm2", "Ccna2", "Ccne1", "Ccnd1", "Ccnb1", "Cdk1", "Bub1", "Aurka", "Plk1", "Pcna")
+
+Epigenetic_regulators_Hishida <-
+c("Kat2b", "Jmjd8", "Hdac11", "Sirt3", "Sirt1", "Kdm7a", "Riox2", "Smarcc1", "Kdm3a", "Hdac4", "Tet2", "Cdyl", "Hdac1", "Kdm5b", "Kat7", "Arid1a", "Kdm6a", "Ino80d", "Kat6b", "Ino80", "Kdm1a", "Kdm1b", "Ezh2", "Smarca5", "Hdac2", "Prmt5", "Ruvbl1", "Smyd5", "Kat2a", "Jarid2", "Tet1", "Mta2", "Elp3", "Smarca4", "Kdm3b", "Chd4", "Ino80c", "Ncoa3", "Hat1", "Jmjd1c", "Kmt5a", "Dnmt1")
+# Mina = Riox2
+# Setd8 = Kmt5a
+
+
+# Deciphering the roadmap of in vivo reprogramming toward pluripotency
+# Chondronasiou et al.
+# Stem cell reports 2022
+# https://www.sciencedirect.com/science/article/pii/S2213671122004581?ref=pdf_download&fr=RR-2&rr=8608a4b19b516aa0
+
+Early_intermediate_reprogramming_Chondronasiou <- c("Muc5ac")
+
+Early_and_advanced_intermediate_reprogramming_Chondronasiou <- c("Ly6a", "Aldh3a1", "Nccrp1", "Tff1", "Cd9", "Gsto1")
+
+Advanced_intermediate_reprogramming_Chondronasiou <- c("S100a6", "Ly6g6c", "Slurp1", "Anxa8", "Fam25c", "Dkkl1", "Krt13", "Krt6a", "Krt14", "Krt16", "Cnfn", "Sdcbp2", "Avil", "Epop")
+# Fam25 = Fam25c
+
+Apoptosis <- 
+c("Aifm1", "Aimp1", "Bad", "Bak1", "Bax", "Bbc3", "Bcl2", "Bcl10", "Bcl2l1", "Bik", "Birc5", "Card19", "Casp1", "Casp2", "Casp3", "Casp4", "Casp6", "Casp7", "Casp8", "Casp9", "Casp12", "Cflar", "Cradd", "Diablo", "Ero1a", "Fadd", "Fasl", "Gzma", "Gzmb", "Lamtor5", "Lcn2", "Ltbr", "Mapt", "Meox2", "Mfn2", "Mlkl", "Naip1", "Naip5", "Nfil3", "Optn", "Cdk5r1", "Pcna", "Pdcd4", "Pidd1", "Pmaip1", "Prf1", "Ptpn6", "Rfc4", "Serpinb9", "Sfrp1", "Smpd1", "Syvn1", "Tgfb1", "Tgfb2", "Tnfaip8", "Tnfrsf10b", "Tnfrsf11b", "Tnfsf10", "Tradd", "Xiap")
+# Bclxl = Bcl2l1
+# Bclxs = Bcl2l1
+# Birc8
+# Card8
+# Casp5
+# Casp10
+# Faslg = Fasl
+# p35 = Cdk5r1
+# Pidd = Pidd1
+# Tnfrsf10a
+# Tnfrsf10c
+# Tnfrsf10d
+
+```
+
+# Create a list of selected genes
+```{r}
+
+selected_genes <- 
+list(
+"Hepatocyte_Hishida"            = Hepatocyte_Hishida,
+"Progenitor_Hishida"            = Progenitor_Hishida,
+"p53_Hishida"                   = p53_Hishida,
+"Cell_cycle_Hishida"            = Cell_cycle_Hishida,
+"Epigenetic_regulators_Hishida" = Epigenetic_regulators_Hishida,
+"Apoptosis"                     = Apoptosis,
+"Early_intermediate_reprogramming_Chondronasiou"              = Early_intermediate_reprogramming_Chondronasiou,
+"Early_and_advanced_intermediate_reprogramming_Chondronasiou" = Early_and_advanced_intermediate_reprogramming_Chondronasiou,
+"Advanced_intermediate_reprogramming_Chondronasiou"           = Advanced_intermediate_reprogramming_Chondronasiou
+)
+
+```
+
+# Check whether all genes names from the selected genes are present in the gene annotation
+```{r}
+
+stopifnot(
+all(unlist(selected_genes) %in% rowData(SummarizedExperiment_object)$gene_name)
+)
+
+```
+
+# Save object
+```{r}
+
+save(selected_genes, file = "output/database/selected_genes.RData")
+
+```
+
+# Session information
+```{r Session info, echo = FALSE, results = "markup"}
+
+devtools::session_info()
+
+```
+
+This document was processed on: `r Sys.Date()`.
