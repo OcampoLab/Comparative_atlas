@@ -1,5 +1,5 @@
 ---
-title:    "Ocampo Lab mouse reprogramming"
+title:    "Comparative analysis of in vivo reprogramming mouse strains"
 subtitle: "Metadata"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
@@ -28,7 +28,7 @@ metadata <- readxl::read_xlsx("docs/metadata/metadata_mouse.xlsx")
 
 ```
 
-# Convert the Tissue and Genotype columns to factors
+# Convert the character variables to factors
 ```{r}
 
 metadata <- 

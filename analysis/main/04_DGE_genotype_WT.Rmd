@@ -1,5 +1,5 @@
 ---
-title:    "Ocampo Lab mouse reprogramming"
+title:    "Comparative analysis of in vivo reprogramming mouse strains"
 subtitle: "DGE results - Comparison between genotype and WT with tissues combined"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
@@ -722,7 +722,6 @@ dev.off()
 pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_upregulated_plots_4.pdf", width = 6, height = 4)
 gprofiler2_upregulated_plots$`4FsA.vs.WT`
 dev.off()
-
 
 pdf(file = "output/figures/04_DGE_genotype_WT/gprofiler2_downregulated_plots_1.pdf", width = 10, height = 6)
 gprofiler2_downregulated_plots$`4Fj.vs.WT`

@@ -1,5 +1,5 @@
 ---
-title:    "Ocampo Lab mouse reprogramming"
+title:    "Comparative analysis of in vivo reprogramming mouse strains"
 subtitle: "Differential expressed genes"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
@@ -129,7 +129,7 @@ map(list("4Fj.vs.WT_Kidney"          = c("4Fj",  "WT", "Kidney"),
          ),
     function(x){
 
-  # Subset samples to match the genotypes being tested
+  # Subset samples to match the genotypes and tissues being tested
   sample_subset <- 
     metadata_subset %>% 
     filter(Tissue == x[3]) %>% 
@@ -215,7 +215,7 @@ map(list(
          ),
     function(x){
 
-  # Subset samples to match the genotypes being tested
+  # Subset samples to match the genotypes and tissues being tested
   sample_subset <- 
     metadata_subset %>% 
     filter(Tissue == x[3]) %>% 
@@ -296,7 +296,7 @@ map(list(
          ),
     function(x){
 
-  # Subset samples to match the genotypes being tested
+  # Subset samples to match the genotypes and tissues being tested
   sample_subset <- 
     metadata_subset %>% 
     filter(Genotype %in% x[1]) %>% 
@@ -304,7 +304,7 @@ map(list(
                               TRUE ~ "Other tissues")) %>%
     pull(`Sample ID`)
   
-  # Subset the DESeq2 object and create new Genotype levels
+  # Subset the DESeq2 object and create new tissue levels
   deseq2_object <- deseq2_object[,colnames(deseq2_object) %in% sample_subset]
   deseq2_object$Tissue <- factor(deseq2_object$Tissue, levels = c("Other tissues", x[2]))
   deseq2_object$Tissue <- deseq2_object$Tissue %>% str_replace_na("Other tissues")

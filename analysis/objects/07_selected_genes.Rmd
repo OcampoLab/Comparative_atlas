@@ -1,5 +1,5 @@
 ---
-title:    "Ocampo Lab mouse reprogramming"
+title:    "Comparative analysis of in vivo reprogramming mouse strains"
 subtitle: "List of selected genes"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
@@ -72,16 +72,16 @@ Apoptosis <-
 c("Aifm1", "Aimp1", "Bad", "Bak1", "Bax", "Bbc3", "Bcl2", "Bcl10", "Bcl2l1", "Bik", "Birc5", "Card19", "Casp1", "Casp2", "Casp3", "Casp4", "Casp6", "Casp7", "Casp8", "Casp9", "Casp12", "Cflar", "Cradd", "Diablo", "Ero1a", "Fadd", "Fasl", "Gzma", "Gzmb", "Lamtor5", "Lcn2", "Ltbr", "Mapt", "Meox2", "Mfn2", "Mlkl", "Naip1", "Naip5", "Nfil3", "Optn", "Cdk5r1", "Pcna", "Pdcd4", "Pidd1", "Pmaip1", "Prf1", "Ptpn6", "Rfc4", "Serpinb9", "Sfrp1", "Smpd1", "Syvn1", "Tgfb1", "Tgfb2", "Tnfaip8", "Tnfrsf10b", "Tnfrsf11b", "Tnfsf10", "Tradd", "Xiap")
 # Bclxl = Bcl2l1
 # Bclxs = Bcl2l1
-# Birc8
-# Card8
-# Casp5
-# Casp10
+# Birc8 (removed)
+# Card8 (removed)
+# Casp5 (removed)
+# Casp10 (removed)
 # Faslg = Fasl
 # p35 = Cdk5r1
 # Pidd = Pidd1
-# Tnfrsf10a
-# Tnfrsf10c
-# Tnfrsf10d
+# Tnfrsf10a (removed)
+# Tnfrsf10c (removed)
+# Tnfrsf10d (removed)
 
 ```
 
@@ -200,7 +200,6 @@ Myocytes_PanglaoDB <-
   PanglaoDB_markers %>% 
   filter(`cell type` %in% "Myocytes") %>% 
   filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
-  #filter(`canonical marker` == 1) %>% 
   pull(`official gene symbol`) %>% 
   str_to_sentence()
 
@@ -263,27 +262,27 @@ Macrophages_PanglaoDB <-
 
 selected_genes <- 
 list(
-"Hepatocyte_Hishida"            = Hepatocyte_Hishida,
-"Progenitor_Hishida"            = Progenitor_Hishida,
-"p53_Hishida"                   = p53_Hishida,
-"Cell_cycle_Hishida"            = Cell_cycle_Hishida,
-"Epigenetic_regulators_Hishida" = Epigenetic_regulators_Hishida,
-"Apoptosis"                     = Apoptosis,
+"Hepatocyte_Hishida"                                          = Hepatocyte_Hishida,
+"Progenitor_Hishida"                                          = Progenitor_Hishida,
+"p53_Hishida"                                                 = p53_Hishida,
+"Cell_cycle_Hishida"                                          = Cell_cycle_Hishida,
+"Epigenetic_regulators_Hishida"                               = Epigenetic_regulators_Hishida,
+"Apoptosis"                                                   = Apoptosis,
 "Early_intermediate_reprogramming_Chondronasiou"              = Early_intermediate_reprogramming_Chondronasiou,
 "Early_and_advanced_intermediate_reprogramming_Chondronasiou" = Early_and_advanced_intermediate_reprogramming_Chondronasiou,
 "Advanced_intermediate_reprogramming_Chondronasiou"           = Advanced_intermediate_reprogramming_Chondronasiou,
-"Enterocytes_PanglaoDB"                 = Enterocytes_PanglaoDB,
-"P_tubule_cells_PanglaoDB"              = P_tubule_cells_PanglaoDB,
-"D_tubule_cells_PanglaoDB"              = D_tubule_cells_PanglaoDB,
-"Podocytes_PanglaoDB"                   = Podocytes_PanglaoDB,
-"Renal_epithelial_cells_Clark_et_al"    = Renal_epithelial_cells_Clark_et_al,
-"Renal_nonepithelial_cells_Clark_et_al" = Renal_nonepithelial_cells_Clark_et_al,
-"Cardiomyocytes_PanglaoDB"              = Cardiomyocytes_PanglaoDB,
-"Neurons_PanglaoDB"                     = Neurons_PanglaoDB,
-"Astrocytes_PanglaoDB"                  = Astrocytes_PanglaoDB,
-"Oligodendrocytes_PanglaoDB"            = Oligodendrocytes_PanglaoDB,
-"Myocytes_PanglaoDB"                    = Myocytes_PanglaoDB,
-"Macrophages_PanglaoDB"                 = Macrophages_PanglaoDB
+"Enterocytes_PanglaoDB"                                       = Enterocytes_PanglaoDB,
+"P_tubule_cells_PanglaoDB"                                    = P_tubule_cells_PanglaoDB,
+"D_tubule_cells_PanglaoDB"                                    = D_tubule_cells_PanglaoDB,
+"Podocytes_PanglaoDB"                                         = Podocytes_PanglaoDB,
+"Renal_epithelial_cells_Clark_et_al"                          = Renal_epithelial_cells_Clark_et_al,
+"Renal_nonepithelial_cells_Clark_et_al"                       = Renal_nonepithelial_cells_Clark_et_al,
+"Cardiomyocytes_PanglaoDB"                                    = Cardiomyocytes_PanglaoDB,
+"Neurons_PanglaoDB"                                           = Neurons_PanglaoDB,
+"Astrocytes_PanglaoDB"                                        = Astrocytes_PanglaoDB,
+"Oligodendrocytes_PanglaoDB"                                  = Oligodendrocytes_PanglaoDB,
+"Myocytes_PanglaoDB"                                          = Myocytes_PanglaoDB,
+"Macrophages_PanglaoDB"                                       = Macrophages_PanglaoDB
 )
 
 ```

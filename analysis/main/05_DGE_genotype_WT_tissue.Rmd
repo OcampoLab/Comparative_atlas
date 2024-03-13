@@ -1,5 +1,5 @@
 ---
-title:    "Ocampo Lab mouse reprogramming"
+title:    "Comparative analysis of in vivo reprogramming mouse strains"
 subtitle: "DGE results - Comparison between genotype and WT by tissue"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
@@ -189,9 +189,9 @@ plot_DGE_pct <-
 # Number of differentially expressed genes shared between tissues
 shared_DGE <- 
   map_dfr(DGE_genotype_WT_tissue_results, ~ rbind(.x$geneID_up_downregulated)) %>% 
-    dplyr::select(gene_id, Condition) %>% 
-    spread(Condition, -gene_id) %>% 
-    mutate_at(.vars = vars(-c("gene_id")), .funs = ~ as.numeric(as.factor(.x)) %>% replace_na(replace = 0))
+  dplyr::select(gene_id, Condition) %>% 
+  spread(Condition, -gene_id) %>% 
+  mutate_at(.vars = vars(-c("gene_id")), .funs = ~ as.numeric(as.factor(.x)) %>% replace_na(replace = 0))
 
 ```
 

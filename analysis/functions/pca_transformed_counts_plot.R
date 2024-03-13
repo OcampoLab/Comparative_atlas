@@ -1,4 +1,4 @@
-# Function to make PCA plot
+# Function to make the PCA plot
 
 # Required packages
 require(tidyverse)

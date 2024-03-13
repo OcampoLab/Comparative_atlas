@@ -1,5 +1,5 @@
 ---
-title:    "Ocampo Lab mouse reprogramming"
+title:    "Comparative analysis of in vivo reprogramming mouse strains"
 subtitle: "Selected genes expression"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
@@ -781,240 +781,6 @@ map(list(
 
 ```
 
-# Save heatmaps 6
-```{r}
-
-# Proximal tubule cells
-pdf(file = "output/figures/02_selected_genes_expression/ht6_1.pdf", width = 4, height = 13)
-ht6$`Proximal tubule cells` %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Proximal tubule cells"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht6_1_scaled.pdf", width = 4, height = 13)
-ht6_scaled$`Proximal tubule cells` %>% 
-  draw(heatmap_legend_side = "bottom", 
-       row_title           = c("Proximal tubule cells"), 
-       row_title_side      = "right",
-       row_title_gp        = gpar(fontface = "bold")
-       )
-dev.off()
-
-# Distal tubule cells
-pdf(file = "output/figures/02_selected_genes_expression/ht6_2.pdf", width = 4, height = 5)
-ht6$`Distal tubule cells` %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Distal tubule cells"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht6_2_scaled.pdf", width = 4, height = 5)
-ht6_scaled$`Distal tubule cells` %>% 
-  draw(heatmap_legend_side = "bottom", 
-       row_title           = c("Distal tubule cells"), 
-       row_title_side      = "right",
-       row_title_gp        = gpar(fontface = "bold")
-       )
-dev.off()
-
-# Podocytes
-pdf(file = "output/figures/02_selected_genes_expression/ht6_3.pdf", width = 4, height = 16)
-ht6$Podocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Podocytes"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht6_3_scaled.pdf", width = 4, height = 16)
-ht6_scaled$Podocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-       row_title           = c("Podocytes"), 
-       row_title_side      = "right",
-       row_title_gp        = gpar(fontface = "bold")
-       )
-dev.off()
-
-# Epithelial cells
-pdf(file = "output/figures/02_selected_genes_expression/ht6_4.pdf", width = 4, height = 4.5)
-ht6$`Epithelial cells` %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Epithelial cells"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht6_4_scaled.pdf", width = 4, height = 4.5)
-ht6_scaled$`Epithelial cells` %>% 
-  draw(heatmap_legend_side = "bottom", 
-       row_title           = c("Epithelial cells"), 
-       row_title_side      = "right",
-       row_title_gp        = gpar(fontface = "bold")
-       )
-dev.off()
-
-# Non-epithelial cells
-pdf(file = "output/figures/02_selected_genes_expression/ht6_5.pdf", width = 4, height = 4.5)
-ht6$`Non-epithelial cells` %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Non-epithelial cells"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht6_5_scaled.pdf", width = 4, height = 4.5)
-ht6_scaled$`Non-epithelial cells` %>% 
-  draw(heatmap_legend_side = "bottom", 
-       row_title           = c("Non-epithelial cells"), 
-       row_title_side      = "right",
-       row_title_gp        = gpar(fontface = "bold")
-       )
-dev.off()
-
-```
-
-# Save heatmaps 7
-```{r}
-
-# Cardiomyocytes
-pdf(file = "output/figures/02_selected_genes_expression/ht7_1.pdf", width = 4, height = 15)
-ht7$Cardiomyocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Cardiomyocytes"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht7_1_scaled.pdf", width = 4, height = 15)
-ht7_scaled$Cardiomyocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Cardiomyocytes"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-```
-
-# Save heatmaps 8
-```{r}
-
-# Neurons
-pdf(file = "output/figures/02_selected_genes_expression/ht8_1.pdf", width = 4, height = 15)
-ht8$Neurons %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Neurons"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht8_1_scaled.pdf", width = 4, height = 15)
-ht8_scaled$Neurons %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Neurons"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-# Astrocytes
-pdf(file = "output/figures/02_selected_genes_expression/ht8_2.pdf", width = 4, height = 12)
-ht8$Astrocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Astrocytes"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht8_2_scaled.pdf", width = 4, height = 12)
-ht8_scaled$Astrocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Astrocytes"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-# Oligodendrocytes
-pdf(file = "output/figures/02_selected_genes_expression/ht8_3.pdf", width = 4, height = 15)
-ht8$Oligodendrocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Oligodendrocytes"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht8_3_scaled.pdf", width = 4, height = 15)
-ht8_scaled$Oligodendrocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Oligodendrocytes"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-```
-
-# Save heatmaps 9
-```{r}
-
-# Myocytes
-pdf(file = "output/figures/02_selected_genes_expression/ht9_1.pdf", width = 4, height = 15)
-ht9$Myocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Myocytes"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht9_1_scaled.pdf", width = 4, height = 15)
-ht9_scaled$Myocytes %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Myocytes"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-```
-
-# Save heatmaps 10
-```{r}
-
-# Macrophages
-pdf(file = "output/figures/02_selected_genes_expression/ht10_1.pdf", width = 3, height = 22)
-ht10$Macrophages %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Macrophages"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-pdf(file = "output/figures/02_selected_genes_expression/ht10_1_scaled.pdf", width = 3, height = 22)
-ht10_scaled$Macrophages %>% 
-  draw(heatmap_legend_side = "bottom", 
-     row_title           = c("Macrophages"), 
-     row_title_side      = "right",
-     row_title_gp        = gpar(fontface = "bold")
-     )
-dev.off()
-
-```
-
 # Save heatmaps 1
 ```{r}
 
@@ -1310,6 +1076,240 @@ dev.off()
 
 pdf(file = "output/figures/02_selected_genes_expression/ht5_scaled.pdf", width = 4, height = 15)
 draw(ht5_scaled, heatmap_legend_side = "bottom")
+dev.off()
+
+```
+
+# Save heatmaps 6
+```{r}
+
+# Proximal tubule cells
+pdf(file = "output/figures/02_selected_genes_expression/ht6_1.pdf", width = 4, height = 13)
+ht6$`Proximal tubule cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Proximal tubule cells"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_1_scaled.pdf", width = 4, height = 13)
+ht6_scaled$`Proximal tubule cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Proximal tubule cells"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+# Distal tubule cells
+pdf(file = "output/figures/02_selected_genes_expression/ht6_2.pdf", width = 4, height = 5)
+ht6$`Distal tubule cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Distal tubule cells"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_2_scaled.pdf", width = 4, height = 5)
+ht6_scaled$`Distal tubule cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Distal tubule cells"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+# Podocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht6_3.pdf", width = 4, height = 16)
+ht6$Podocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Podocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_3_scaled.pdf", width = 4, height = 16)
+ht6_scaled$Podocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Podocytes"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+# Epithelial cells
+pdf(file = "output/figures/02_selected_genes_expression/ht6_4.pdf", width = 4, height = 4.5)
+ht6$`Epithelial cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Epithelial cells"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_4_scaled.pdf", width = 4, height = 4.5)
+ht6_scaled$`Epithelial cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Epithelial cells"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+# Non-epithelial cells
+pdf(file = "output/figures/02_selected_genes_expression/ht6_5.pdf", width = 4, height = 4.5)
+ht6$`Non-epithelial cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Non-epithelial cells"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_5_scaled.pdf", width = 4, height = 4.5)
+ht6_scaled$`Non-epithelial cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Non-epithelial cells"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+```
+
+# Save heatmaps 7
+```{r}
+
+# Cardiomyocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht7_1.pdf", width = 4, height = 15)
+ht7$Cardiomyocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Cardiomyocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht7_1_scaled.pdf", width = 4, height = 15)
+ht7_scaled$Cardiomyocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Cardiomyocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Save heatmaps 8
+```{r}
+
+# Neurons
+pdf(file = "output/figures/02_selected_genes_expression/ht8_1.pdf", width = 4, height = 15)
+ht8$Neurons %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Neurons"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht8_1_scaled.pdf", width = 4, height = 15)
+ht8_scaled$Neurons %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Neurons"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+# Astrocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht8_2.pdf", width = 4, height = 12)
+ht8$Astrocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Astrocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht8_2_scaled.pdf", width = 4, height = 12)
+ht8_scaled$Astrocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Astrocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+# Oligodendrocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht8_3.pdf", width = 4, height = 15)
+ht8$Oligodendrocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Oligodendrocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht8_3_scaled.pdf", width = 4, height = 15)
+ht8_scaled$Oligodendrocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Oligodendrocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Save heatmaps 9
+```{r}
+
+# Myocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht9_1.pdf", width = 4, height = 15)
+ht9$Myocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Myocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht9_1_scaled.pdf", width = 4, height = 15)
+ht9_scaled$Myocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Myocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Save heatmaps 10
+```{r}
+
+# Macrophages
+pdf(file = "output/figures/02_selected_genes_expression/ht10_1.pdf", width = 3, height = 22)
+ht10$Macrophages %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Macrophages"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht10_1_scaled.pdf", width = 3, height = 22)
+ht10_scaled$Macrophages %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Macrophages"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
 dev.off()
 
 ```

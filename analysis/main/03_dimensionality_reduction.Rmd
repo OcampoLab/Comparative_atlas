@@ -1,5 +1,5 @@
 ---
-title:    "Ocampo Lab mouse reprogramming"
+title:    "Comparative analysis of in vivo reprogramming mouse strains"
 subtitle: "Dimensionality reduction"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
@@ -166,7 +166,7 @@ function(rnaseq_object, metadata, fill_column, perplexity_vector) {
     ) %>% 
     mutate(perplexity = factor(paste("Perplexity =", perplexity), levels = paste("Perplexity =", perplexity_vector)))
 
-# T-SNE plot colored by metallomics batch
+  # T-SNE plot colored by metallomics batch
   tSNE_plot <- 
     tSNE_df %>%
     ggplot(aes(x    = tSNE1, 
