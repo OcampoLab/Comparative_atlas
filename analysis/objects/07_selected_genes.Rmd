@@ -85,6 +85,179 @@ c("Aifm1", "Aimp1", "Bad", "Bak1", "Bax", "Bbc3", "Bcl2", "Bcl10", "Bcl2l1", "Bi
 
 ```
 
+# PanglaoDB canonical genes
+```{r}
+
+# Loading the PanglaoDB marker gene lists
+PanglaoDB_markers <- read_tsv(file = "docs/genes/PanglaoDB_markers_27_Mar_2020.tsv")
+
+#######################
+# Kidney
+#######################
+# Proximal tubule cells
+P_tubule_cells_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Proximal tubule cells") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+# Distal tubule cells
+D_tubule_cells_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Distal tubule cells") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+# Podocytes
+Podocytes_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Podocytes") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+# Representation and relative abundance of cell-type selective markers in whole-kidney RNA-Seq data
+# Clark et al.
+# Kidney International (2019)
+# https://www.sciencedirect.com/science/article/pii/S0085253818309128?via%3Dihub
+
+# Renal epithelial cells
+Renal_epithelial_cells_Clark_et_al <- 
+  c("Nphs2", "Slc5a2", "Clcnka", "Slc12a1", "Ptgs2", "Slc12a3", "Calb1", "Aqp2", "Slc4a1", "Slc26a4", "Slc14a2", "Upk1a")
+
+# Renal epithelial cells
+Renal_nonepithelial_cells_Clark_et_al <- 
+  c("Cd69", "Cd22", "Adgre1", "Pecam1", "Pdgfrb", 'Ren1', "Cd68", "Cd14", "Stx1a", 'Acta2', "Csf3r", "Cd4")
+
+
+#######################
+# Small intestine
+#######################
+# Enterocytes
+Enterocytes_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Enterocytes") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+
+#######################
+# Heart
+#######################
+# Cardiomyocytes
+Cardiomyocytes_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Cardiomyocytes") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+
+#######################
+# Brain
+#######################
+# Neurons
+Neurons_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Neurons") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+# Astrocytes
+Astrocytes_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Astrocytes") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+# Oligodendrocytes
+Oligodendrocytes_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Oligodendrocytes") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+
+#######################
+# Skeletal muscle
+#######################
+# Myocytes
+Myocytes_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Myocytes") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  #filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+
+#######################
+# Spleen
+#######################
+# Macrophages
+Macrophages_PanglaoDB <- 
+  PanglaoDB_markers %>% 
+  filter(`cell type` %in% "Macrophages") %>% 
+  filter(species %in% c("Mm", "Mm Hs", "Hs Mm")) %>% 
+  filter(`canonical marker` == 1) %>% 
+  pull(`official gene symbol`) %>% 
+  str_to_sentence()
+
+```
+
+# Correcting gene names
+```{r}
+
+# Podocytes_PanglaoDB
+# Ccn2 = Ctgf
+# Qki  = Qk
+Podocytes_PanglaoDB <- 
+  Podocytes_PanglaoDB %>% 
+  str_replace("Ctgf", "Ccn2") %>% 
+  str_replace("Qk", "Qki")
+
+# Cardiomyocytes_PanglaoDB
+# Ccn2 = Ctgf
+Cardiomyocytes_PanglaoDB <- 
+  Cardiomyocytes_PanglaoDB %>% 
+  str_replace("Ctgf", "Ccn2")
+
+# Myocytes_PanglaoDB
+# Or52ab4 = Olfr599
+Myocytes_PanglaoDB <- 
+  Myocytes_PanglaoDB %>% 
+  str_replace("Olfr599", "Or52ab4")
+
+# Macrophages_PanglaoDB
+# H2-DMa  = H2-dma
+# Marchf1 = March1
+# Lilrb4b = Lilr4b
+# H2-Ab1  = H2-ab1
+# H2-Eb1  = H2-eb1
+Macrophages_PanglaoDB <- 
+  Macrophages_PanglaoDB %>% 
+  str_replace("H2-dma", "H2-DMa") %>% 
+  str_replace("March1", "Marchf1") %>% 
+  str_replace("Lilr4b", "Lilrb4b") %>% 
+  str_replace("H2-ab1", "H2-Ab1") %>% 
+  str_replace("H2-eb1", "H2-Eb1")
+
+```
+
 # Create a list of selected genes
 ```{r}
 
@@ -98,7 +271,19 @@ list(
 "Apoptosis"                     = Apoptosis,
 "Early_intermediate_reprogramming_Chondronasiou"              = Early_intermediate_reprogramming_Chondronasiou,
 "Early_and_advanced_intermediate_reprogramming_Chondronasiou" = Early_and_advanced_intermediate_reprogramming_Chondronasiou,
-"Advanced_intermediate_reprogramming_Chondronasiou"           = Advanced_intermediate_reprogramming_Chondronasiou
+"Advanced_intermediate_reprogramming_Chondronasiou"           = Advanced_intermediate_reprogramming_Chondronasiou,
+"Enterocytes_PanglaoDB"                 = Enterocytes_PanglaoDB,
+"P_tubule_cells_PanglaoDB"              = P_tubule_cells_PanglaoDB,
+"D_tubule_cells_PanglaoDB"              = D_tubule_cells_PanglaoDB,
+"Podocytes_PanglaoDB"                   = Podocytes_PanglaoDB,
+"Renal_epithelial_cells_Clark_et_al"    = Renal_epithelial_cells_Clark_et_al,
+"Renal_nonepithelial_cells_Clark_et_al" = Renal_nonepithelial_cells_Clark_et_al,
+"Cardiomyocytes_PanglaoDB"              = Cardiomyocytes_PanglaoDB,
+"Neurons_PanglaoDB"                     = Neurons_PanglaoDB,
+"Astrocytes_PanglaoDB"                  = Astrocytes_PanglaoDB,
+"Oligodendrocytes_PanglaoDB"            = Oligodendrocytes_PanglaoDB,
+"Myocytes_PanglaoDB"                    = Myocytes_PanglaoDB,
+"Macrophages_PanglaoDB"                 = Macrophages_PanglaoDB
 )
 
 ```

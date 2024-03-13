@@ -368,6 +368,653 @@ map(list(
 
 ```
 
+# 5. Enterocytes genes on the Small intestine data
+```{r}
+
+########################################
+# Non-scaled
+########################################
+ht5 <- 
+  heatmap_plot_data$Enterocytes_PanglaoDB %>% 
+  filter(Tissue == "Small intestine") %>%
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors, 
+                          cluster_columns      = F, 
+                          column_title         = "Small intestine",
+                          column_title_gp      = gpar(fontface = "bold", cex = 1.25),
+                          row_title            = "Enterocytes",
+                          row_title_rot        = 0,
+                          row_title_side       = "right",
+                          row_title_gp         = gpar(fontface = "bold"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+
+########################################
+# Scaled
+########################################
+ht5_scaled <- 
+  heatmap_plot_data$Enterocytes_PanglaoDB %>% 
+  filter(Tissue == "Small intestine") %>%
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  t %>% 
+  scale %>% 
+  t %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled, 
+                          cluster_columns      = F, 
+                          column_title         = "Small intestine",
+                          column_title_gp      = gpar(fontface = "bold", cex = 1.25),
+                          row_title            = "Enterocytes",
+                          row_title_rot        = 0,
+                          row_title_side       = "right",
+                          row_title_gp         = gpar(fontface = "bold"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+
+```
+
+# 6. Kidney genes on the Kidney data
+```{r}
+
+########################################
+# Non-Scaled
+########################################
+ht6 <- 
+map(list(
+  "Proximal tubule cells" = heatmap_plot_data$P_tubule_cells_PanglaoDB,
+  "Distal tubule cells"   = heatmap_plot_data$D_tubule_cells_PanglaoDB,
+  "Podocytes"             = heatmap_plot_data$Podocytes_PanglaoDB,
+  "Epithelial cells"      = heatmap_plot_data$Renal_epithelial_cells_Clark_et_al,
+  "Non-epithelial cells"  = heatmap_plot_data$Renal_nonepithelial_cells_Clark_et_al), 
+  function(x){
+    
+  x %>% 
+  filter(Tissue == "Kidney") %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Kidney",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+########################################
+# Scaled
+########################################
+ht6_scaled <- 
+map(list(
+  "Proximal tubule cells" = heatmap_plot_data$P_tubule_cells_PanglaoDB,
+  "Distal tubule cells"   = heatmap_plot_data$D_tubule_cells_PanglaoDB,
+  "Podocytes"             = heatmap_plot_data$Podocytes_PanglaoDB,
+  "Epithelial cells"      = heatmap_plot_data$Renal_epithelial_cells_Clark_et_al,
+  "Non-epithelial cells"  = heatmap_plot_data$Renal_nonepithelial_cells_Clark_et_al), 
+  function(x){
+    
+  x %>% 
+  filter(Tissue == "Kidney") %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  t %>% 
+  scale %>% 
+  t %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Kidney",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+```
+
+# 7. Heart genes on the Heart data
+```{r}
+
+########################################
+# Non-Scaled
+########################################
+ht7 <- 
+map(list(
+  "Cardiomyocytes" = heatmap_plot_data$Cardiomyocytes_PanglaoDB), 
+  function(x){
+    
+  x %>% 
+  filter(Tissue == "Heart") %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Heart",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+########################################
+# Scaled
+########################################
+ht7_scaled <- 
+map(list(
+  "Cardiomyocytes" = heatmap_plot_data$Cardiomyocytes_PanglaoDB), 
+  function(x){
+    
+  x %>% 
+  filter(Tissue == "Heart") %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  t %>% 
+  scale %>% 
+  t %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Heart",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+```
+
+# 8. Brain genes on the Brain data
+```{r}
+
+########################################
+# Non-Scaled
+########################################
+ht8 <- 
+map(list(
+  "Neurons"          = heatmap_plot_data$Neurons_PanglaoDB,
+  "Astrocytes"       = heatmap_plot_data$Astrocytes_PanglaoDB,
+  "Oligodendrocytes" = heatmap_plot_data$Oligodendrocytes_PanglaoDB), 
+  function(x){
+    
+  x %>% 
+  filter(Tissue == "Brain") %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Brain",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+########################################
+# Scaled
+########################################
+ht8_scaled <- 
+map(list(
+  "Neurons"          = heatmap_plot_data$Neurons_PanglaoDB,
+  "Astrocytes"       = heatmap_plot_data$Astrocytes_PanglaoDB,
+  "Oligodendrocytes" = heatmap_plot_data$Oligodendrocytes_PanglaoDB),  
+  function(x){
+    
+  x %>% 
+  filter(Tissue == "Brain") %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  t %>% 
+  scale %>% 
+  t %>% 
+  .[complete.cases(.), ] %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Brain",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+```
+
+# 9. Skeletal muscle genes on the Skeletal muscle data
+```{r}
+
+########################################
+# Non-Scaled
+########################################
+ht9 <- 
+map(list(
+  "Myocytes" = heatmap_plot_data$Myocytes_PanglaoDB), 
+  function(x){
+    
+  x %>% 
+  filter(!gene_name %in% "Arhgap26") %>% 
+  filter(Tissue == "Skeletal muscle") %>%
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Skeletal muscle",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+########################################
+# Scaled
+########################################
+ht9_scaled <- 
+map(list(
+  "Myocytes" = heatmap_plot_data$Myocytes_PanglaoDB),  
+  function(x){
+    
+  x %>% 
+  filter(!gene_name %in% "Arhgap26") %>% 
+  filter(Tissue == "Skeletal muscle") %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  t %>% 
+  scale %>% 
+  t %>% 
+  .[complete.cases(.), ] %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Skeletal muscle",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+```
+
+# 10. Spleen genes on the Spleen data
+```{r}
+
+########################################
+# Non-Scaled
+########################################
+ht10 <- 
+map(list(
+  "Macrophages" = heatmap_plot_data$Macrophages_PanglaoDB), 
+  function(x){
+    
+  x %>% 
+  filter(Tissue == "Spleen") %>%
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  ComplexHeatmap::Heatmap(name                 = "Log2(norm. counts + 1)",
+                          col                  = heatmap_colors,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Spleen",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+########################################
+# Scaled
+########################################
+ht10_scaled <- 
+map(list(
+  "Macrophages" = heatmap_plot_data$Macrophages_PanglaoDB),  
+  function(x){
+    
+  x %>% 
+  filter(Tissue == "Spleen") %>% 
+  dplyr::select(-Tissue) %>% 
+  dplyr::select(gene_name, Genotype, mean_log2_norm_counts) %>% 
+  spread(Genotype, mean_log2_norm_counts) %>% 
+  column_to_rownames("gene_name") %>% 
+  as.matrix() %>% 
+  t %>% 
+  scale %>% 
+  t %>% 
+  .[complete.cases(.), ] %>% 
+  ComplexHeatmap::Heatmap(name                 = "Row Z-score",
+                          col                  = heatmap_colors_scaled,
+                          cluster_columns      = F, 
+                          cluster_rows         = T, 
+                          cluster_row_slices   = F,
+                          column_title         = "Spleen",
+                          row_title_rot        = 0,
+                          column_title_gp      = gpar(fontface = "bold", cex = 1),
+                          gap                  = unit(.1, "in"),
+                          column_names_rot     = 45,
+                          rect_gp              = gpar(col = "white", lwd = 1),
+                          heatmap_legend_param = list(legend_direction = "horizontal", legend_width = unit(4, "cm")),
+                          border               = "black")
+})
+
+```
+
+# Save heatmaps 6
+```{r}
+
+# Proximal tubule cells
+pdf(file = "output/figures/02_selected_genes_expression/ht6_1.pdf", width = 4, height = 13)
+ht6$`Proximal tubule cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Proximal tubule cells"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_1_scaled.pdf", width = 4, height = 13)
+ht6_scaled$`Proximal tubule cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Proximal tubule cells"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+# Distal tubule cells
+pdf(file = "output/figures/02_selected_genes_expression/ht6_2.pdf", width = 4, height = 5)
+ht6$`Distal tubule cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Distal tubule cells"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_2_scaled.pdf", width = 4, height = 5)
+ht6_scaled$`Distal tubule cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Distal tubule cells"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+# Podocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht6_3.pdf", width = 4, height = 16)
+ht6$Podocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Podocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_3_scaled.pdf", width = 4, height = 16)
+ht6_scaled$Podocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Podocytes"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+# Epithelial cells
+pdf(file = "output/figures/02_selected_genes_expression/ht6_4.pdf", width = 4, height = 4.5)
+ht6$`Epithelial cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Epithelial cells"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_4_scaled.pdf", width = 4, height = 4.5)
+ht6_scaled$`Epithelial cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Epithelial cells"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+# Non-epithelial cells
+pdf(file = "output/figures/02_selected_genes_expression/ht6_5.pdf", width = 4, height = 4.5)
+ht6$`Non-epithelial cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Non-epithelial cells"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht6_5_scaled.pdf", width = 4, height = 4.5)
+ht6_scaled$`Non-epithelial cells` %>% 
+  draw(heatmap_legend_side = "bottom", 
+       row_title           = c("Non-epithelial cells"), 
+       row_title_side      = "right",
+       row_title_gp        = gpar(fontface = "bold")
+       )
+dev.off()
+
+```
+
+# Save heatmaps 7
+```{r}
+
+# Cardiomyocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht7_1.pdf", width = 4, height = 15)
+ht7$Cardiomyocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Cardiomyocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht7_1_scaled.pdf", width = 4, height = 15)
+ht7_scaled$Cardiomyocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Cardiomyocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Save heatmaps 8
+```{r}
+
+# Neurons
+pdf(file = "output/figures/02_selected_genes_expression/ht8_1.pdf", width = 4, height = 15)
+ht8$Neurons %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Neurons"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht8_1_scaled.pdf", width = 4, height = 15)
+ht8_scaled$Neurons %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Neurons"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+# Astrocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht8_2.pdf", width = 4, height = 12)
+ht8$Astrocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Astrocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht8_2_scaled.pdf", width = 4, height = 12)
+ht8_scaled$Astrocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Astrocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+# Oligodendrocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht8_3.pdf", width = 4, height = 15)
+ht8$Oligodendrocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Oligodendrocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht8_3_scaled.pdf", width = 4, height = 15)
+ht8_scaled$Oligodendrocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Oligodendrocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Save heatmaps 9
+```{r}
+
+# Myocytes
+pdf(file = "output/figures/02_selected_genes_expression/ht9_1.pdf", width = 4, height = 15)
+ht9$Myocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Myocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht9_1_scaled.pdf", width = 4, height = 15)
+ht9_scaled$Myocytes %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Myocytes"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
+# Save heatmaps 10
+```{r}
+
+# Macrophages
+pdf(file = "output/figures/02_selected_genes_expression/ht10_1.pdf", width = 3, height = 22)
+ht10$Macrophages %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Macrophages"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht10_1_scaled.pdf", width = 3, height = 22)
+ht10_scaled$Macrophages %>% 
+  draw(heatmap_legend_side = "bottom", 
+     row_title           = c("Macrophages"), 
+     row_title_side      = "right",
+     row_title_gp        = gpar(fontface = "bold")
+     )
+dev.off()
+
+```
+
 # Save heatmaps 1
 ```{r}
 
@@ -650,6 +1297,19 @@ draw(heatmap_legend_side = "bottom",
      row_title_side      = "right",
      row_title_gp        = gpar(fontface = "bold")
      )
+dev.off()
+
+```
+
+# Save heatmaps 5
+```{r}
+
+pdf(file = "output/figures/02_selected_genes_expression/ht5.pdf", width = 4, height = 15)
+draw(ht5, heatmap_legend_side = "bottom")
+dev.off()
+
+pdf(file = "output/figures/02_selected_genes_expression/ht5_scaled.pdf", width = 4, height = 15)
+draw(ht5_scaled, heatmap_legend_side = "bottom")
 dev.off()
 
 ```
