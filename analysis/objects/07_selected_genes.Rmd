@@ -1,5 +1,5 @@
 ---
-title:    "Comparative analysis of in vivo reprogramming mouse strains"
+title:    "Comparative analysis of mouse strains for in vivo reprogramming"
 subtitle: "List of selected genes"
 author:   "Author: João Agostinho de Sousa"
 date:     "Date: `r format(Sys.time(),'%d %B, %Y')`"
